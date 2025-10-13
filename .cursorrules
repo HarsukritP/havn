@@ -1,0 +1,1306 @@
+# SpotSave - Cursor AI Rules & Context
+
+## Project Overview
+
+**What We're Building:**
+SpotSave is a mobile-first platform that solves the campus study spot discovery problem. Students waste 15-30 minutes wandering campus looking for available study spots. SpotSave provides real-time, crowdsourced availability data via an interactive map, enabling students to know exactly where to go before leaving their current location.
+
+**Core Value Proposition:**
+Know exactly where to go, every time. See real-time availability, contribute data for points, and save seats for friends arriving soon.
+
+**Key Innovation:**
+Combines crowdsourced real-time data with a peer-to-peer seat reservation system (spot-saving) that creates powerful network effects.
+
+---
+
+## Tech Stack
+
+### Backend
+- **Language:** Go 1.21+
+- **Framework:** Gin Web Framework v1.9+
+- **Database:** PostgreSQL 15+ with PostGIS extension (geospatial queries)
+- **Cache/Pub-Sub:** Redis 7+ (session storage, WebSocket pub/sub, rate limiting)
+- **Real-Time:** WebSockets via `gorilla/websocket`
+- **Authentication:** JWT tokens via `golang-jwt/jwt`
+- **Deployment:** Docker + Fly.io or AWS ECS
+
+### Frontend
+- **Framework:** React Native 0.73+
+- **Language:** TypeScript 5+ (strict mode enabled)
+- **UI Components:** Gluestack UI v2 (production-grade component library)
+- **Navigation:** React Navigation 6 (bottom tabs + stack)
+- **State Management:** React Query v5 (server state) + Zustand (client state)
+- **Maps:** react-native-maps (Apple Maps for iOS, Google Maps for Android)
+- **Animations:** react-native-reanimated v3 (60fps smooth animations)
+- **Gestures:** react-native-gesture-handler v2 (swipe, long press, pan)
+- **Haptics:** expo-haptics (tactile feedback for interactions)
+- **HTTP Client:** Axios with interceptors
+- **Storage:** AsyncStorage for JWT persistence
+
+### Infrastructure
+- **Containerization:** Docker with multi-stage builds
+- **Database Migrations:** golang-migrate
+- **Error Tracking:** Sentry (frontend + backend)
+- **Analytics:** Mixpanel (user events, funnels)
+- **Push Notifications:** Firebase Cloud Messaging
+
+---
+
+## Coding Standards
+
+### Go Backend Standards
+
+**1. Error Handling:**
+```go
+// GOOD: Explicit error handling
+result, err := someFunction()
+if err != nil {
+    log.Error("Failed to execute someFunction", "error", err)
+    c.JSON(http.StatusInternalServerError, gin.H{
+        "success": false,
+        "error":   "Internal server error",
+        "code":    "INTERNAL_ERROR",
+    })
+    return
+}
+
+// BAD: Ignoring errors
+result, _ := someFunction() // NEVER DO THIS
+```
+
+**2. Function Options Pattern:**
+```go
+// GOOD: Use functional options for complex initialization
+type SpotOptions struct {
+    Radius int
+    Limit  int
+}
+
+type SpotOption func(*SpotOptions)
+
+func WithRadius(r int) SpotOption {
+    return func(o *SpotOptions) {
+        o.Radius = r
+    }
+}
+
+func GetNearbySpots(lat, lng float64, opts ...SpotOption) ([]Spot, error) {
+    options := &SpotOptions{Radius: 500, Limit: 20} // defaults
+    for _, opt := range opts {
+        opt(options)
+    }
+    // ...
+}
+```
+
+**3. Context Usage:**
+```go
+// GOOD: Pass context for cancellation, timeouts
+func (s *SpotService) GetSpot(ctx context.Context, id string) (*Spot, error) {
+    var spot Spot
+    err := s.db.QueryRowContext(ctx, "SELECT * FROM study_spots WHERE id = $1", id).Scan(&spot)
+    return &spot, err
+}
+
+// BAD: No context
+func (s *SpotService) GetSpot(id string) (*Spot, error) { ... }
+```
+
+**4. Database Queries:**
+```go
+// GOOD: Use prepared statements or parameterized queries
+query := "SELECT * FROM study_spots WHERE id = $1"
+err := db.QueryRowContext(ctx, query, spotID).Scan(&spot)
+
+// BAD: String concatenation (SQL injection risk)
+query := "SELECT * FROM study_spots WHERE id = '" + spotID + "'" // NEVER DO THIS
+```
+
+**5. Response Format (Always Consistent):**
+```go
+// Success response
+c.JSON(http.StatusOK, gin.H{
+    "success": true,
+    "data": data,
+    "message": "Optional success message",
+})
+
+// Error response
+c.JSON(http.StatusBadRequest, gin.H{
+    "success": false,
+    "error": "Human-readable error message",
+    "code": "ERROR_CODE",
+})
+```
+
+**6. Avoid `var` for New Variables:**
+```go
+// GOOD: Use := for new variables
+spot := &Spot{Name: "Library"}
+
+// ONLY use var for zero values or when type matters
+var count int // zero value needed
+```
+
+**7. Structured Logging:**
+```go
+// GOOD: Structured logging with context
+log.Info("User registered", 
+    "user_id", user.ID, 
+    "email", user.Email,
+    "ip", c.ClientIP())
+
+// BAD: Unstructured strings
+log.Println("User " + user.Email + " registered") // AVOID
+```
+
+---
+
+### React Native / TypeScript Standards
+
+**1. Functional Components Only:**
+```typescript
+// GOOD: Functional component with TypeScript
+interface MapScreenProps {
+  navigation: NavigationProp<any>;
+}
+
+export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
+  const [spots, setSpots] = useState<Spot[]>([]);
+  // ...
+};
+
+// BAD: Class components
+class MapScreen extends React.Component { ... } // AVOID
+```
+
+**2. TypeScript Strict Mode:**
+```typescript
+// tsconfig.json must have:
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  }
+}
+
+// NEVER use `any` type
+const data: any = await fetchSpots(); // BAD
+
+// ALWAYS define proper types
+interface Spot {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  // ...
+}
+const data: Spot[] = await fetchSpots(); // GOOD
+```
+
+**3. Centralized API Layer:**
+```typescript
+// src/services/spots.ts
+import api from './api'; // Axios instance
+
+export const getSpots = async (params?: GetSpotsParams): Promise<Spot[]> => {
+  const response = await api.get<ApiResponse<Spot[]>>('/spots', { params });
+  return response.data;
+};
+
+// In component:
+const { data: spots, isLoading, error } = useQuery({
+  queryKey: ['spots', lat, lng],
+  queryFn: () => getSpots({ lat, lng })
+});
+```
+
+**4. Loading and Error States (Always):**
+```typescript
+// GOOD: Handle all states
+if (isLoading) return <LoadingSpinner />;
+if (error) return <ErrorState error={error} onRetry={refetch} />;
+if (!spots || spots.length === 0) return <EmptyState />;
+
+return <SpotList spots={spots} />;
+
+// BAD: No error handling
+return <SpotList spots={spots} />; // What if spots is undefined?
+```
+
+**5. React Query for Server State:**
+```typescript
+// GOOD: Use React Query for all API calls
+const { data, isLoading, error, refetch } = useQuery({
+  queryKey: ['spots', params],
+  queryFn: () => getSpots(params),
+  staleTime: 5 * 60 * 1000, // 5 minutes
+});
+
+// Mutations:
+const mutation = useMutation({
+  mutationFn: updateSpotAvailability,
+  onSuccess: () => {
+    queryClient.invalidateQueries(['spots']);
+  },
+});
+
+// BAD: Manual state management for server data
+const [spots, setSpots] = useState([]);
+useEffect(() => {
+  fetchSpots().then(setSpots); // AVOID (use React Query)
+}, []);
+```
+
+**6. Component Organization:**
+```typescript
+// Component structure (top to bottom):
+// 1. Imports
+// 2. Types/Interfaces
+// 3. Component definition
+// 4. Hooks (useState, useEffect, custom hooks)
+// 5. Event handlers
+// 6. Render helpers
+// 7. Return JSX
+// 8. Styles (StyleSheet.create)
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+interface SpotCardProps {
+  spot: Spot;
+  onPress: (spot: Spot) => void;
+}
+
+export const SpotCard: React.FC<SpotCardProps> = ({ spot, onPress }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  const handlePress = () => {
+    onPress(spot);
+  };
+  
+  const renderAvailability = () => {
+    // ...
+  };
+  
+  return (
+    <View style={styles.container}>
+      {/* JSX */}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { /* ... */ },
+});
+```
+
+**7. No Hardcoded Values:**
+```typescript
+// BAD:
+const API_URL = "http://localhost:8080/api"; // NEVER hardcode
+
+// GOOD: Use environment variables
+import Config from 'react-native-config';
+const API_URL = Config.API_BASE_URL;
+
+// Or constants file:
+import { API_BASE_URL } from '@/constants/config';
+```
+
+---
+
+### UI Component & Animation Standards
+
+**CRITICAL:** SpotSave must have production-grade UI polish comparable to shadcn/ui or Aceternity UI.
+
+**1. Component Library - Gluestack UI v2:**
+```typescript
+// GOOD: Use Gluestack UI components
+import { Button, Card, Input, VStack, HStack } from '@gluestack-ui/themed';
+
+export const SpotCard: React.FC<SpotCardProps> = ({ spot }) => {
+  return (
+    <Card>
+      <VStack space="md">
+        <HStack justifyContent="space-between">
+          <Text>{spot.name}</Text>
+          <Badge>{spot.availability_status}</Badge>
+        </HStack>
+      </VStack>
+    </Card>
+  );
+};
+
+// BAD: Building from scratch without component library
+const SpotCard = () => <View><Text>...</Text></View>; // AVOID - use Gluestack
+```
+
+**2. Animations - React Native Reanimated v3:**
+```typescript
+// GOOD: Use Reanimated for smooth 60fps animations
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming 
+} from 'react-native-reanimated';
+
+export const AnimatedButton: React.FC = ({ children, onPress }) => {
+  const scale = useSharedValue(1);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }]
+  }));
+  
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95);
+  };
+  
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
+  
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+};
+
+// BAD: Using Animated API (old, slower)
+import { Animated } from 'react-native'; // AVOID - use Reanimated
+```
+
+**3. Haptic Feedback - Always:**
+```typescript
+// GOOD: Add haptics for user interactions
+import * as Haptics from 'expo-haptics';
+
+const handleCheckIn = async () => {
+  // Light haptic on button press
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  
+  try {
+    await submitUpdate();
+    // Success haptic (heavier)
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  } catch (error) {
+    // Error haptic
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  }
+};
+
+// Haptic patterns:
+// - Light: Button taps, toggles
+// - Medium: Swipe actions, selections
+// - Heavy: Important actions (check-in submit)
+// - Success: Successful operations (+5 points!)
+// - Warning: Geofence violations
+// - Error: Failed operations
+```
+
+**4. Skeleton Loaders (Not Spinners):**
+```typescript
+// GOOD: Skeleton loaders for content
+import { Skeleton, VStack } from '@gluestack-ui/themed';
+
+const SpotListSkeleton = () => (
+  <VStack space="md">
+    {[1, 2, 3].map(i => (
+      <Skeleton key={i} h={100} borderRadius={12} />
+    ))}
+  </VStack>
+);
+
+// In component:
+if (isLoading) return <SpotListSkeleton />;
+if (error) return <ErrorState />;
+return <SpotList spots={spots} />;
+
+// BAD: Generic spinner
+if (isLoading) return <ActivityIndicator />; // AVOID - use skeletons
+```
+
+**5. Smooth Gestures:**
+```typescript
+// GOOD: Use gesture-handler for native feel
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+
+export const SwipeableCard: React.FC = ({ onSwipeRight, children }) => {
+  const translateX = useSharedValue(0);
+  
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      translateX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      if (e.translationX > 100) {
+        onSwipeRight();
+      }
+      translateX.value = withSpring(0);
+    });
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }]
+  }));
+  
+  return (
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={animatedStyle}>
+        {children}
+      </Animated.View>
+    </GestureDetector>
+  );
+};
+```
+
+**6. Visual Polish Requirements:**
+
+**Shadows & Depth:**
+```typescript
+// GOOD: Consistent shadow system
+const shadows = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1, // Android
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+};
+
+// Use in components:
+<Card style={shadows.md}>...</Card>
+```
+
+**Spacing Scale:**
+```typescript
+// GOOD: Consistent 4px-based spacing
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  '2xl': 32,
+  '3xl': 48,
+  '4xl': 64,
+};
+
+// Use in layouts:
+<VStack space={spacing.md}>...</VStack>
+```
+
+**Border Radius:**
+```typescript
+// GOOD: Consistent corner radius
+export const borderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  full: 9999,
+};
+
+// Use in components:
+<Card borderRadius={borderRadius.md}>...</Card>
+```
+
+**7. Optimistic Updates:**
+```typescript
+// GOOD: Update UI immediately, sync in background
+const updateMutation = useMutation({
+  mutationFn: updateSpotAvailability,
+  onMutate: async (newData) => {
+    // Cancel outgoing refetches
+    await queryClient.cancelQueries(['spots', spot.id]);
+    
+    // Snapshot previous value
+    const previousSpot = queryClient.getQueryData(['spots', spot.id]);
+    
+    // Optimistically update UI
+    queryClient.setQueryData(['spots', spot.id], (old: Spot) => ({
+      ...old,
+      current_available: newData.seatsAvailable,
+      last_update_at: new Date().toISOString(),
+    }));
+    
+    // Return context for rollback
+    return { previousSpot };
+  },
+  onError: (err, newData, context) => {
+    // Rollback on error
+    queryClient.setQueryData(['spots', spot.id], context.previousSpot);
+  },
+  onSettled: () => {
+    // Refetch to ensure consistency
+    queryClient.invalidateQueries(['spots', spot.id]);
+  },
+});
+```
+
+**8. Micro-interactions (Always Include):**
+
+**Button Press:**
+```typescript
+const AnimatedPressable = ({ children, onPress }: any) => {
+  const scale = useSharedValue(1);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }]
+  }));
+  
+  return (
+    <Pressable
+      onPressIn={() => {
+        scale.value = withTiming(0.95, { duration: 100 });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      onPress={onPress}
+    >
+      <Animated.View style={animatedStyle}>
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+};
+```
+
+**Success Checkmark:**
+```typescript
+const SuccessCheckmark = () => {
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  
+  useEffect(() => {
+    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
+    opacity.value = withTiming(1, { duration: 200 });
+  }, []);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+  
+  return (
+    <Animated.View style={animatedStyle}>
+      <CheckCircle size={64} color="#10B981" />
+    </Animated.View>
+  );
+};
+```
+
+**9. Accessibility (Non-Negotiable):**
+```typescript
+// GOOD: Every interactive element has labels
+<Pressable
+  accessibilityRole="button"
+  accessibilityLabel="Update availability for Main Library"
+  accessibilityHint="Opens a form to report current seat count"
+  onPress={handlePress}
+>
+  <Text>Update Availability</Text>
+</Pressable>
+
+// Minimum touch targets: 44x44pt
+const styles = StyleSheet.create({
+  button: {
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+```
+
+**10. Component Checklist:**
+
+Every custom component MUST have:
+- [ ] TypeScript props interface with JSDoc comments
+- [ ] Smooth animations (button press, transitions)
+- [ ] Haptic feedback (where appropriate)
+- [ ] Loading state (skeleton, not spinner)
+- [ ] Error state (with retry action)
+- [ ] Empty state (if displaying lists)
+- [ ] Accessibility labels
+- [ ] Consistent spacing (using spacing scale)
+- [ ] Consistent shadows (using shadow scale)
+- [ ] Minimum 44x44pt touch targets
+
+---
+
+## File Organization
+
+### Backend Structure
+```
+backend/
+├── cmd/
+│   └── server/
+│       └── main.go              # Entry point
+├── internal/
+│   ├── handlers/                # HTTP request handlers
+│   │   ├── auth_handler.go
+│   │   ├── spot_handler.go
+│   │   └── user_handler.go
+│   ├── services/                # Business logic
+│   │   ├── auth_service.go
+│   │   ├── spot_service.go
+│   │   └── gamification_service.go
+│   ├── models/                  # Database models/structs
+│   │   ├── user.go
+│   │   ├── spot.go
+│   │   └── update.go
+│   ├── middleware/              # Gin middleware
+│   │   ├── auth.go
+│   │   ├── cors.go
+│   │   └── rate_limit.go
+│   ├── database/                # DB connection, migrations
+│   │   ├── db.go
+│   │   └── postgres.go
+│   └── websocket/               # WebSocket server
+│       ├── hub.go
+│       └── client.go
+├── migrations/                  # SQL migration files
+│   ├── 001_create_users.up.sql
+│   └── 001_create_users.down.sql
+├── config/                      # Configuration
+│   └── config.go
+├── Dockerfile
+└── go.mod
+```
+
+### Frontend Structure
+```
+mobile/
+├── src/
+│   ├── screens/                 # Screen components
+│   │   ├── auth/
+│   │   ├── MapScreen.tsx
+│   │   ├── SpotDetailScreen.tsx
+│   │   └── ProfileScreen.tsx
+│   ├── components/              # Reusable components
+│   │   ├── SpotMarker.tsx
+│   │   ├── SpotCard.tsx
+│   │   └── CheckInModal.tsx
+│   ├── services/                # API layer
+│   │   ├── api.ts               # Axios instance
+│   │   ├── auth.ts
+│   │   └── spots.ts
+│   ├── hooks/                   # Custom hooks
+│   │   ├── useAuth.ts
+│   │   └── useSpots.ts
+│   ├── store/                   # Zustand stores
+│   │   └── authStore.ts
+│   ├── types/                   # TypeScript types
+│   │   ├── api.ts
+│   │   ├── spot.ts
+│   │   └── user.ts
+│   ├── utils/                   # Utility functions
+│   │   ├── formatters.ts
+│   │   └── validators.ts
+│   ├── constants/               # Constants
+│   │   ├── colors.ts
+│   │   └── config.ts
+│   └── navigation/
+│       └── AppNavigator.tsx
+├── App.tsx
+└── package.json
+```
+
+**Rules:**
+- Backend: Group by feature (handlers, services, models separate)
+- Frontend: Group by type (all screens together, all components together)
+- Never put logic in `main.go` or `App.tsx` - only initialization
+- Keep files focused (< 300 lines ideal, max 500 lines)
+
+---
+
+## What to Always Include
+
+**Every Backend Handler:**
+- [ ] Input validation (check required fields, validate types)
+- [ ] Authentication check (if endpoint requires auth)
+- [ ] Error handling (wrap errors, log with context)
+- [ ] Consistent response format (success/error structure)
+- [ ] Rate limiting (for sensitive endpoints)
+- [ ] Request logging (log all requests with user ID, IP)
+
+**Every Frontend API Call:**
+- [ ] TypeScript types for request and response
+- [ ] Loading state (show spinner or skeleton)
+- [ ] Error state (show error message with retry)
+- [ ] Empty state (if response could be empty array)
+- [ ] React Query for caching and state management
+- [ ] Optimistic updates (for mutations)
+
+**Every Database Query:**
+- [ ] Parameterized/prepared statements (no string concatenation)
+- [ ] Context for cancellation
+- [ ] Error handling
+- [ ] Indexes on queried columns (verify with EXPLAIN)
+- [ ] Transaction for multi-step operations
+
+**Every Component:**
+- [ ] TypeScript props interface
+- [ ] PropTypes validation (runtime check)
+- [ ] Accessibility labels (`accessibilityLabel`, `accessibilityHint`)
+- [ ] Loading/error/empty states
+- [ ] Comments for complex logic
+
+---
+
+## What to Never Do
+
+**Backend:**
+- ❌ NEVER use string concatenation for SQL queries (SQL injection risk)
+- ❌ NEVER ignore errors (`_, err := doSomething()` without checking)
+- ❌ NEVER log sensitive data (passwords, tokens, full credit cards)
+- ❌ NEVER hardcode secrets (use environment variables)
+- ❌ NEVER return stack traces to client (log them, return generic error)
+- ❌ NEVER skip input validation (always validate user input)
+- ❌ NEVER use `var` when `:=` is appropriate
+- ❌ NEVER deploy without database indexes on foreign keys
+
+**Frontend:**
+- ❌ NEVER use `any` type in TypeScript (defeats the purpose)
+- ❌ NEVER hardcode API URLs or secrets in code
+- ❌ NEVER ignore linter warnings (fix them or disable with explanation)
+- ❌ NEVER forget loading/error states
+- ❌ NEVER mutate state directly (use setState, Zustand actions)
+- ❌ NEVER store sensitive data in AsyncStorage unencrypted (use Keychain)
+- ❌ NEVER use `console.log` in production (use proper logging)
+
+**Both:**
+- ❌ NEVER commit secrets or API keys to Git
+- ❌ NEVER skip error handling
+- ❌ NEVER deploy untested code
+- ❌ NEVER break the API contract (breaking changes require versioning)
+
+---
+
+## Testing Approach
+
+### Backend Testing
+- **Unit Tests:** Test business logic in services (use Go's testing package)
+- **Integration Tests:** Test API endpoints (use httptest)
+- **Database Tests:** Use test database with migrations
+- **Coverage Goal:** 70%+ for critical paths (auth, spot updates, gamification)
+
+**Example:**
+```go
+func TestGetSpot_Success(t *testing.T) {
+    // Setup
+    db := setupTestDB(t)
+    service := NewSpotService(db)
+    
+    // Execute
+    spot, err := service.GetSpot(context.Background(), "valid-uuid")
+    
+    // Assert
+    assert.NoError(t, err)
+    assert.NotNil(t, spot)
+    assert.Equal(t, "Main Library", spot.Name)
+}
+```
+
+### Frontend Testing
+- **Unit Tests:** Test utility functions, hooks (Jest)
+- **Component Tests:** Test component rendering (React Native Testing Library)
+- **E2E Tests:** Test user flows (Detox - Phase 2)
+- **Coverage Goal:** 60%+ for utilities and hooks
+
+**Example:**
+```typescript
+describe('SpotCard', () => {
+  it('displays spot name and availability', () => {
+    const spot = createMockSpot({ name: 'Library', current_available: 10 });
+    const { getByText } = render(<SpotCard spot={spot} />);
+    
+    expect(getByText('Library')).toBeTruthy();
+    expect(getByText('10 seats available')).toBeTruthy();
+  });
+});
+```
+
+---
+
+## Common Patterns
+
+### Backend: Standard Handler Pattern
+
+```go
+// handlers/spot_handler.go
+func (h *SpotHandler) UpdateSpotAvailability(c *gin.Context) {
+    // 1. Get authenticated user from context
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{
+            "success": false,
+            "error":   "Unauthorized",
+            "code":    "UNAUTHORIZED",
+        })
+        return
+    }
+    
+    // 2. Parse and validate request
+    var req UpdateSpotRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "success": false,
+            "error":   "Invalid request format",
+            "code":    "VALIDATION_ERROR",
+        })
+        return
+    }
+    
+    // 3. Validate business logic (geofencing, etc.)
+    if err := h.validateUpdate(&req); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, gin.H{
+            "success": false,
+            "error":   err.Error(),
+            "code":    "GEOFENCE_VIOLATION",
+        })
+        return
+    }
+    
+    // 4. Call service layer
+    result, err := h.spotService.UpdateAvailability(c.Request.Context(), userID.(string), &req)
+    if err != nil {
+        log.Error("Failed to update spot availability", "error", err, "user_id", userID)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "success": false,
+            "error":   "Internal server error",
+            "code":    "INTERNAL_ERROR",
+        })
+        return
+    }
+    
+    // 5. Return success response
+    c.JSON(http.StatusOK, gin.H{
+        "success": true,
+        "data":    result,
+        "message": "Thanks for helping the community! +5 points",
+    })
+}
+```
+
+### Frontend: API Call with React Query
+
+```typescript
+// services/spots.ts
+export interface UpdateSpotParams {
+  spotId: string;
+  seatsAvailable: number;
+  noiseLevel?: 'quiet' | 'moderate' | 'loud';
+  userLatitude: number;
+  userLongitude: number;
+}
+
+export const updateSpotAvailability = async (params: UpdateSpotParams): Promise<UpdateResponse> => {
+  const { spotId, ...body } = params;
+  const response = await api.post<ApiResponse<UpdateResponse>>(`/spots/${spotId}/update`, body);
+  return response.data;
+};
+
+// In component:
+const updateMutation = useMutation({
+  mutationFn: updateSpotAvailability,
+  onSuccess: (data) => {
+    // Invalidate spots query to refetch
+    queryClient.invalidateQueries(['spots']);
+    
+    // Show success toast
+    Toast.show({
+      type: 'success',
+      text1: `+${data.rewards.total_points_earned} points!`,
+    });
+  },
+  onError: (error: ApiError) => {
+    Toast.show({
+      type: 'error',
+      text1: error.error || 'Failed to update spot',
+    });
+  },
+});
+
+// Usage:
+const handleSubmit = () => {
+  updateMutation.mutate({
+    spotId: spot.id,
+    seatsAvailable: selectedSeats,
+    noiseLevel: selectedNoise,
+    userLatitude: location.latitude,
+    userLongitude: location.longitude,
+  });
+};
+```
+
+---
+
+## Performance Requirements
+
+**Backend:**
+- API response time: p50 <100ms, p95 <200ms, p99 <500ms
+- WebSocket message latency: <100ms
+- Database queries: <50ms for simple queries, <200ms for complex joins
+- Support 100+ concurrent WebSocket connections per server instance
+
+**Frontend:**
+- App launch (cold start): <3 seconds
+- Map render (50 markers): <1 second
+- Screen transitions: <300ms
+- Image loading: Progressive (show placeholder, then load)
+- Offline capability: Show cached data when no internet
+
+**Optimization Strategies:**
+- Backend: Database indexes, Redis caching, connection pooling
+- Frontend: React Query caching, image optimization, code splitting
+- Map: Marker clustering when >50 markers visible
+
+---
+
+## Security Checklist
+
+**Authentication:**
+- [ ] JWT tokens expire (7 days max)
+- [ ] Tokens stored securely (Keychain on iOS, Keystore on Android)
+- [ ] Logout invalidates token (Redis blacklist)
+- [ ] Password minimum requirements (8 chars, uppercase, lowercase, number)
+- [ ] Rate limiting on auth endpoints (10 req/min per IP)
+
+**API Security:**
+- [ ] All endpoints validate input (no SQL injection, XSS)
+- [ ] Parameterized queries only (no string concatenation)
+- [ ] HTTPS only in production (TLS 1.3)
+- [ ] CORS configured (allow only known origins)
+- [ ] Rate limiting on all endpoints (100 req/min per user)
+
+**Data Privacy:**
+- [ ] No location history stored (only current update location)
+- [ ] User names partially obscured in public views ("Jane D.")
+- [ ] Email verification required (or strongly incentivized)
+- [ ] GDPR compliant (data deletion on request)
+
+**Geofencing:**
+- [ ] Enforce 100m radius for spot updates (prevent remote trolling)
+- [ ] Calculate distance server-side (don't trust client)
+
+---
+
+## Documentation Requirements
+
+**Code Comments:**
+- Public functions: Describe what it does, params, return value
+- Complex logic: Explain the "why", not the "what"
+- TODOs: Include ticket number and context
+
+**Example:**
+```go
+// CalculateConfidenceScore computes a confidence score (0-100) for a spot update
+// based on the user's reputation, recency of the update, and consistency with
+// recent updates from other users.
+//
+// Params:
+//   - update: The spot update to score
+//   - userReputation: The submitting user's reputation score (0-100)
+//   - recentUpdates: Last 5 updates for this spot
+//
+// Returns:
+//   - float64: Confidence score (0-100)
+func CalculateConfidenceScore(update *SpotUpdate, userReputation float64, recentUpdates []*SpotUpdate) float64 {
+    // TODO(#42): Factor in time of day patterns (e.g., library is always full at 2pm)
+    
+    score := 50.0 // base score
+    
+    // User reputation bonus (max +30)
+    score += (userReputation / 100) * 30
+    
+    // Consistency bonus (max +20)
+    if isConsistentWithRecent(update, recentUpdates) {
+        score += 20
+    }
+    
+    return math.Min(score, 100)
+}
+```
+
+**API Documentation:**
+- All endpoints documented in `docs/api-spec.md`
+- Postman collection kept up to date
+- Example requests/responses for every endpoint
+
+**Git Commit Messages:**
+```
+feat: Add geofencing validation to spot updates
+
+- Implement server-side distance calculation using PostGIS
+- Reject updates from users >100m away
+- Add GEOFENCE_VIOLATION error code
+- Add tests for geofencing edge cases
+
+Closes #23
+```
+
+**Format:** `type: Short description` (50 chars max)
+
+**Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+
+---
+
+## Priority Order for MVP Features
+
+**Week 1: Backend Foundation**
+1. Project setup (Go + PostgreSQL + Redis + Docker)
+2. Database schema and migrations
+3. Authentication (register, login, JWT)
+4. Basic spot endpoints (GET spots, GET spot by ID)
+
+**Week 2: Frontend Foundation**
+1. React Native project setup
+2. Navigation structure (bottom tabs, stack)
+3. Login/Register screens
+4. Map view with markers
+
+**Week 3: Core Functionality**
+1. Spot update endpoint (POST /spots/:id/update)
+2. Geofencing validation
+3. Check-in modal (frontend)
+4. Gamification (points, streaks)
+
+**Week 4: Polish & Launch**
+1. WebSocket real-time updates
+2. Profile screen with stats
+3. Performance optimization (map clustering, caching)
+4. Beta testing with 10-20 users
+
+**Post-MVP (Phase 2+):**
+- Spot-saving marketplace
+- Study matching
+- ML predictions
+- Premium features
+
+**Rule:** If a feature is not listed in Week 1-4, it's not in MVP. Ship the minimum product that proves the core hypothesis.
+
+---
+
+## Philosophy
+
+**Ship Fast, Iterate Based on Feedback:**
+- Perfect is the enemy of good
+- Launch with 80% solution, improve based on real user feedback
+- Prioritize features that directly solve the core problem (finding study spots)
+- Defer nice-to-haves until post-launch
+
+**Data Quality is Everything:**
+- Bad data = users abandon app after first bad experience
+- Invest in geofencing, confidence scoring, reputation system
+- Monitor accuracy rate daily, aim for 80%+ MVP, 90%+ at scale
+
+**Mobile-First UX:**
+- Students are walking between classes, in a hurry
+- Every interaction must be fast (<3 taps to check in)
+- Offline capability (show cached data when no connection)
+- Battery efficient (geofencing, not continuous GPS)
+
+**Community-Driven:**
+- Users are contributors, not just consumers
+- Celebrate contributions (badges, leaderboards, points)
+- Build trust through transparency (show confidence scores, update recency)
+
+---
+
+## Common Pitfalls to Avoid
+
+**Backend:**
+1. **Missing Indexes:** Every foreign key, every WHERE clause column needs an index
+2. **N+1 Queries:** Use joins or batch loading, not loops
+3. **Ignoring Context:** Always pass `context.Context` for cancellation
+4. **Poor Error Messages:** Generic errors frustrate users; be specific
+
+**Frontend:**
+1. **No Loading States:** Blank screens confuse users; always show loading indicator
+2. **Optimistic Updates:** Update UI immediately, rollback on error
+3. **Memory Leaks:** Clean up subscriptions, timers, listeners in useEffect cleanup
+4. **Image Performance:** Compress images, use lazy loading, cache aggressively
+
+**Both:**
+1. **Scope Creep:** Stay focused on MVP; say no to features that don't directly solve the core problem
+2. **Premature Optimization:** Get it working first, optimize when you have data
+3. **Poor Logging:** Can't debug what you can't see; log all errors with context
+4. **Skipping Testing:** Manual testing catches 80% of bugs; do it before every deploy
+
+---
+
+## Development Workflow
+
+**Daily:**
+1. Pull latest code (`git pull origin develop`)
+2. Review open PRs (give feedback within 4 hours)
+3. Write code, commit frequently with clear messages
+4. Run linters (`golangci-lint run`, `npm run lint`)
+5. Test locally (manual QA for user-facing changes)
+6. Push to feature branch, open PR
+
+**Weekly:**
+1. Friday EOD: Demo completed features to team
+2. Review metrics (signups, DAU, check-ins, crash rate)
+3. Prioritize next week's tasks based on data
+4. Retrospective: What went well, what to improve
+
+**Before Every Commit:**
+- [ ] Code runs without errors
+- [ ] Linter passes (no warnings)
+- [ ] Manual testing done (if user-facing change)
+- [ ] Commit message is clear and descriptive
+
+**Before Every Deploy:**
+- [ ] All tests pass
+- [ ] No linter errors
+- [ ] Smoke test on staging (auth, map view, check-in)
+- [ ] Database migrations tested (up and down)
+- [ ] Rollback plan documented
+
+---
+
+## Environment Variables
+
+**Backend (.env):**
+```
+# Server
+PORT=8080
+GIN_MODE=release
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=spotsave
+DB_PASSWORD=secure_password
+DB_NAME=spotsave_prod
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT
+JWT_SECRET=your-256-bit-secret-key
+JWT_EXPIRY_HOURS=168
+
+# AWS S3 (for photo uploads)
+AWS_REGION=us-east-1
+AWS_BUCKET=spotsave-photos
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# Sentry
+SENTRY_DSN=
+
+# Environment
+ENV=production
+```
+
+**Frontend (.env):**
+```
+API_BASE_URL=https://api.spotsave.app/api
+WS_URL=wss://api.spotsave.app/ws
+SENTRY_DSN=
+MIXPANEL_TOKEN=
+ENV=production
+```
+
+**Rule:** NEVER commit `.env` files. Always use `.env.example` with placeholder values.
+
+---
+
+## Quick Reference
+
+**Run Backend Locally:**
+```bash
+cd backend
+docker-compose up -d  # Start PostgreSQL + Redis
+go run cmd/server/main.go
+```
+
+**Run Frontend Locally:**
+```bash
+cd mobile
+npm install
+npx react-native run-ios  # or run-android
+```
+
+**Run Database Migrations:**
+```bash
+migrate -path migrations -database "postgresql://user:pass@localhost:5432/spotsave?sslmode=disable" up
+```
+
+**Run Tests:**
+```bash
+# Backend
+go test ./...
+
+# Frontend
+npm test
+```
+
+**Deploy to Staging:**
+```bash
+git push origin develop  # Triggers CI/CD
+```
+
+**Deploy to Production:**
+```bash
+git checkout main
+git merge develop
+git push origin main  # Triggers production deploy
+```
+
+---
+
+**Last Updated:** October 13, 2025  
+**Version:** 1.0 (Pre-Development)  
+**Status:** Documentation Phase
+
+---
+
+## Notes for Cursor AI
+
+When working on this project:
+1. **Read the docs first:** All documentation is in `docs/` folder
+2. **Follow patterns:** Use existing code as reference for new features
+3. **Ask before breaking changes:** API contract changes require versioning
+4. **Test before committing:** Manual QA is required for user-facing changes
+5. **Keep it simple:** Prefer simple, readable code over clever optimizations
+6. **Document complex logic:** If it takes >10 seconds to understand, add a comment
+7. **Think mobile-first:** Every feature should work smoothly on a phone
+8. **Prioritize data quality:** Accuracy is more important than feature quantity
+
+**When in doubt:**
+- Check `docs/projectscope.md` for project context
+- Check `docs/mvp.md` for technical implementation details
+- Check `docs/design.md` for UI/UX patterns
+- Check `docs/api-spec.md` for API contract
+
+**Remember:** We're building a tool that saves students time. Every decision should optimize for speed, simplicity, and reliability.
+
