@@ -1,12 +1,12 @@
-# SpotSave - Project Scope & Vision
+# Havn - Project Scope & Vision
 
 ## Project Overview
 
-SpotSave is a mobile-first platform that solves the chronic problem of study space discovery on college campuses. Every day, thousands of students waste 15-30 minutes wandering from building to building looking for available study spots. This inefficiency leads to frustration, wasted time between classes, and ultimately, students giving up and studying alone in their dorm rooms—missing valuable collaborative learning opportunities.
+Havn is a mobile-first platform that solves the chronic problem of study space discovery on college campuses. Every day, thousands of students waste 15-30 minutes wandering from building to building looking for available study spots. This inefficiency leads to frustration, wasted time between classes, and ultimately, students giving up and studying alone in their dorm rooms—missing valuable collaborative learning opportunities.
 
-SpotSave transforms this chaotic process into a seamless experience by providing real-time, crowdsourced availability data for every study spot on campus. Students can open the app, see a live map of all locations color-coded by availability, and make informed decisions about where to go. The platform incentivizes accurate data through gamification, turning every user into a contributor who earns reputation points for timely updates.
+Havn transforms this chaotic process into a seamless experience by providing real-time, crowdsourced availability data for every study spot on campus. Students can open the app, see a live map of all locations color-coded by availability, and make informed decisions about where to go. The platform incentivizes accurate data through gamification, turning every user into a contributor who earns reputation points for timely updates.
 
-The killer feature—spot-saving—creates powerful network effects. Students already at a location can "save" a seat for friends arriving in 10-15 minutes, solving both the finding-a-spot problem and the studying-alone problem simultaneously. This peer-to-peer reservation system transforms SpotSave from a passive information tool into an active social coordination platform.
+The killer feature—spot-saving—creates powerful network effects. Students already at a location can "save" a seat for friends arriving in 10-15 minutes, solving both the finding-a-spot problem and the studying-alone problem simultaneously. This peer-to-peer reservation system transforms Havn from a passive information tool into an active social coordination platform.
 
 ## Core Problem & Solution
 
@@ -152,7 +152,7 @@ The killer feature—spot-saving—creates powerful network effects. Students al
 **Navigation: React Navigation 6**
 - **Bottom Tabs:** Main navigation (Map, List, Update, Profile)
 - **Stack Navigator:** Nested screens (Spot Detail, Settings, etc.)
-- **Deep Linking:** Support for spot URLs (spotsave://spots/123)
+- **Deep Linking:** Support for spot URLs (havn://spots/123)
 - **Shared Element Transitions:** Hero animations between screens
 
 **State Management:**

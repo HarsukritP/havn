@@ -1,4 +1,4 @@
-// Core API types for SpotSave
+// Core API types for Havn
 
 export interface User {
   id: string;

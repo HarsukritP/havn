@@ -26,11 +26,11 @@ docker-down: ## Stop Docker services
 
 migrate-up: ## Run database migrations (up)
 	@echo "Run migrations manually or use golang-migrate tool"
-	@echo "Example: migrate -path migrations -database 'postgresql://spotsave:spotsave_dev@localhost:5432/spotsave_dev?sslmode=disable' up"
+	@echo "Example: migrate -path migrations -database 'postgresql://havn:havn_dev@localhost:5432/havn_dev?sslmode=disable' up"
 
 migrate-down: ## Rollback database migrations
 	@echo "Run migrations manually or use golang-migrate tool"
-	@echo "Example: migrate -path migrations -database 'postgresql://spotsave:spotsave_dev@localhost:5432/spotsave_dev?sslmode=disable' down"
+	@echo "Example: migrate -path migrations -database 'postgresql://havn:havn_dev@localhost:5432/havn_dev?sslmode=disable' down"
 
 install: ## Install Go dependencies
 	go mod download

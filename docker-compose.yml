@@ -4,17 +4,17 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: spotsave-postgres
+    container_name: havn-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-spotsave}
+      POSTGRES_USER: ${POSTGRES_USER:-havn}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD in .env file}
-      POSTGRES_DB: ${POSTGRES_DB:-spotsave_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-havn_dev}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spotsave}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-havn}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: spotsave-redis
+    container_name: havn-redis
     command: redis-server ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
     ports:
       - "6379:6379"
@@ -40,15 +40,15 @@ services:
   #   build:
   #     context: ./backend
   #     dockerfile: Dockerfile
-  #   container_name: spotsave-backend
+  #   container_name: havn-backend
   #   ports:
   #     - "8080:8080"
   #   environment:
   #     DB_HOST: postgres
   #     DB_PORT: 5432
-  #     DB_USER: ${DB_USER:-spotsave}
+  #     DB_USER: ${DB_USER:-havn}
   #     DB_PASSWORD: ${DB_PASSWORD:?Please set DB_PASSWORD in .env file}
-  #     DB_NAME: ${DB_NAME:-spotsave_dev}
+  #     DB_NAME: ${DB_NAME:-havn_dev}
   #     REDIS_HOST: redis
   #     REDIS_PORT: 6379
   #     REDIS_PASSWORD: ${REDIS_PASSWORD:-}

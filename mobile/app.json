@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SpotSave",
-    "slug": "spotsave",
+    "name": "Havn",
+    "slug": "havn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,10 +16,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spotsave.app",
+      "bundleIdentifier": "com.havn.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "SpotSave needs your location to show nearby study spots and verify check-ins.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "SpotSave needs your location to show nearby study spots."
+        "NSLocationWhenInUseUsageDescription": "Havn needs your location to show nearby study spots and verify check-ins.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Havn needs your location to show nearby study spots."
       }
     },
     "android": {
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2563EB"
       },
-      "package": "com.spotsave.app",
+      "package": "com.havn.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
@@ -49,4 +49,3 @@
     ]
   }
 }
-

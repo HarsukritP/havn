@@ -1,13 +1,13 @@
-# SpotSave API Specification
+# Havn API Specification
 
 ## Overview
 
-This document provides the complete API specification for the SpotSave backend. The API follows RESTful principles with JSON request/response payloads and JWT-based authentication.
+This document provides the complete API specification for the Havn backend. The API follows RESTful principles with JSON request/response payloads and JWT-based authentication.
 
 **API Version:** v1  
 **Base URL (Development):** `http://localhost:8080/api`  
-**Base URL (Staging):** `https://staging-api.spotsave.app/api`  
-**Base URL (Production):** `https://api.spotsave.app/api`
+**Base URL (Staging):** `https://staging-api.havn.app/api`  
+**Base URL (Production):** `https://api.havn.app/api`
 
 ---
 
@@ -569,7 +569,7 @@ Content-Type: application/json
 {
   "seats_available": 12,
   "noise_level": "quiet",
-  "photo_url": "https://s3.amazonaws.com/spotsave/photos/abc123.jpg",
+  "photo_url": "https://s3.amazonaws.com/havn/photos/abc123.jpg",
   "user_latitude": 37.8720,
   "user_longitude": -122.2586
 }
@@ -730,7 +730,7 @@ Authorization: Bearer YOUR_TOKEN
           "id": "achievement-uuid",
           "name": "First Check-In",
           "description": "Submit your first availability update",
-          "icon_url": "https://cdn.spotsave.app/badges/first-checkin.png",
+          "icon_url": "https://cdn.havn.app/badges/first-checkin.png",
           "unlocked_at": "2025-10-01T09:30:00Z"
         }
       ]
@@ -936,7 +936,7 @@ GET /api/health
 
 ### Connection
 
-**URL:** `ws://localhost:8080/ws` (dev) or `wss://api.spotsave.app/ws` (prod)
+**URL:** `ws://localhost:8080/ws` (dev) or `wss://api.havn.app/ws` (prod)
 
 **Connection Flow:**
 1. Client opens WebSocket connection
@@ -1080,7 +1080,7 @@ Sent immediately after WebSocket connection opens.
 ```json
 {
   "type": "connection_established",
-  "message": "Welcome to SpotSave WebSocket API",
+  "message": "Welcome to Havn WebSocket API",
   "version": "1.0.0"
 }
 ```
@@ -1313,7 +1313,7 @@ Server error (e.g., invalid message format).
 
 A Postman collection with all endpoints is available at:
 ```
-/backend/docs/SpotSave.postman_collection.json
+/backend/docs/Havn.postman_collection.json
 ```
 
 **Collection includes:**

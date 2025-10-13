@@ -1,4 +1,4 @@
-# SpotSave - Design System & UI Specifications
+# Havn - Design System & UI Specifications
 
 ## Design Principles
 
@@ -551,7 +551,7 @@
 
 ```
 ┌──────────────────────────────────────┐
-│  SpotSave                        now │
+│  Havn                        now │
 │                                      │
 │  💺 Seat save request                │
 │                                      │
@@ -923,7 +923,7 @@ Number Display (Emphasis):
 │                                     │
 │   Location access needed            │
 │                                     │
-│   SpotSave needs your location to   │
+│   Havn needs your location to   │
 │   show nearby study spots.          │
 │                                     │
 │   [ Enable Location ]               │

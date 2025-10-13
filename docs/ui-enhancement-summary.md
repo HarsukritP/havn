@@ -1,8 +1,8 @@
-# SpotSave UI/UX Enhancement Summary
+# Havn UI/UX Enhancement Summary
 
 ## Overview
 
-This document summarizes the UI/UX enhancements added to SpotSave to ensure production-grade polish comparable to shadcn/ui or Aceternity UI.
+This document summarizes the UI/UX enhancements added to Havn to ensure production-grade polish comparable to shadcn/ui or Aceternity UI.
 
 ---
 
@@ -462,7 +462,7 @@ import { Text } from '@gluestack-ui/themed';
 
 ```json
 {
-  "name": "spotsave-mobile",
+  "name": "havn-mobile",
   "version": "1.0.0",
   "dependencies": {
     "react": "18.2.0",

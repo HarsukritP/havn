@@ -15,8 +15,8 @@ interface AuthState {
   updateUser: (user: Partial<User>) => void;
 }
 
-const AUTH_TOKEN_KEY = '@spotsave_auth_token';
-const AUTH_USER_KEY = '@spotsave_auth_user';
+const AUTH_TOKEN_KEY = '@havn_auth_token';
+const AUTH_USER_KEY = '@havn_auth_user';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

@@ -22,17 +22,17 @@ func NewPostgresDB() (*sql.DB, error) {
 
 	user := os.Getenv("DB_USER")
 	if user == "" {
-		user = "spotsave"
+		user = "havn"
 	}
 
 	password := os.Getenv("DB_PASSWORD")
 	if password == "" {
-		password = "spotsave_dev"
+		password = "havn_dev"
 	}
 
 	dbname := os.Getenv("DB_NAME")
 	if dbname == "" {
-		dbname = "spotsave_dev"
+		dbname = "havn_dev"
 	}
 
 	sslmode := os.Getenv("DB_SSLMODE")

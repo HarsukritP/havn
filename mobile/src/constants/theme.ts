@@ -1,4 +1,4 @@
-// SpotSave Design Tokens - Based on docs/design.md
+// Havn Design Tokens - Based on docs/design.md
 
 export const colors = {
   // Brand

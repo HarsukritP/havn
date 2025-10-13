@@ -1,6 +1,6 @@
-# SpotSave Mobile App
+# Havn Mobile App
 
-React Native mobile application for SpotSave - Real-time study spot availability platform.
+React Native mobile application for Havn - Real-time study spot availability platform.
 
 ## Tech Stack
 
@@ -96,7 +96,7 @@ API base URL is configured in `src/services/api.ts`:
 ```typescript
 const API_BASE_URL = __DEV__
   ? 'http://localhost:8080/api'  // Development
-  : 'https://api.spotsave.app/api';  // Production
+  : 'https://api.havn.app/api';  // Production
 ```
 
 **For Physical Device Testing:**

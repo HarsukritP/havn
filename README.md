@@ -1,8 +1,8 @@
-# SpotSave
+# Havn
 
 **Know exactly where to go, every time.**
 
-SpotSave is a mobile-first platform that solves the campus study spot discovery problem through real-time, crowdsourced availability data.
+Havn is a mobile-first platform that solves the campus study spot discovery problem through real-time, crowdsourced availability data.
 
 ---
 
@@ -21,8 +21,8 @@ SpotSave is a mobile-first platform that solves the campus study spot discovery 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/SpotSave.git
-cd SpotSave
+git clone https://github.com/YOUR_USERNAME/havn.git
+cd havn
 
 # 2. Set up environment variables (CRITICAL!)
 cp env.example .env
@@ -47,7 +47,7 @@ npm start
 ## 📁 Project Structure
 
 ```
-SpotSaver/
+havn/
 ├── backend/          # Go backend (Gin + PostgreSQL + Redis)
 ├── mobile/           # React Native mobile app
 ├── docs/             # Complete documentation

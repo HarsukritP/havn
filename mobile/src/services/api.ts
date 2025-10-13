@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // API Configuration
 const API_BASE_URL = __DEV__
   ? 'http://localhost:8080/api'
-  : 'https://api.spotsave.app/api';
+  : 'https://api.havn.app/api';
 
 // Create Axios instance
 const api = axios.create({
@@ -19,7 +19,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('@spotsave_auth_token');
+      const token = await AsyncStorage.getItem('@havn_auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -43,8 +43,8 @@ api.interceptors.response.use(
     if (error.response) {
       // Handle 401 Unauthorized (token expired)
       if (error.response.status === 401) {
-        await AsyncStorage.removeItem('@spotsave_auth_token');
-        await AsyncStorage.removeItem('@spotsave_auth_user');
+        await AsyncStorage.removeItem('@havn_auth_token');
+        await AsyncStorage.removeItem('@havn_auth_user');
         // TODO: Navigate to login screen
       }
       

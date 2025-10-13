@@ -1,4 +1,4 @@
-# Security Best Practices - SpotSave
+# Security Best Practices - Havn
 
 ## 🚨 Critical Security Rules
 
@@ -121,7 +121,7 @@ echo "JWT_SECRET=$NEW_JWT_SECRET" > .env.new
 ```sql
 -- 1. Create new password
 -- 2. Update user password
-ALTER USER spotsave WITH PASSWORD 'new_secure_password_here';
+ALTER USER havn WITH PASSWORD 'new_secure_password_here';
 
 -- 3. Update .env file
 -- 4. Restart services

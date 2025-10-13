@@ -74,7 +74,7 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.logoContainer}>
             <MapPin size={48} color={colors.primary[500]} strokeWidth={2.5} />
           </View>
-          <Text style={styles.title}>SpotSave</Text>
+          <Text style={styles.title}>Havn</Text>
           <Text style={styles.subtitle}>
             Find your perfect study spot in real-time
           </Text>

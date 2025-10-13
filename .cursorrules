@@ -1,9 +1,9 @@
-# SpotSave - Cursor AI Rules & Context
+# Havn - Cursor AI Rules & Context
 
 ## Project Overview
 
 **What We're Building:**
-SpotSave is a mobile-first platform that solves the campus study spot discovery problem. Students waste 15-30 minutes wandering campus looking for available study spots. SpotSave provides real-time, crowdsourced availability data via an interactive map, enabling students to know exactly where to go before leaving their current location.
+Havn is a mobile-first platform that solves the campus study spot discovery problem. Students waste 15-30 minutes wandering campus looking for available study spots. Havn provides real-time, crowdsourced availability data via an interactive map, enabling students to know exactly where to go before leaving their current location.
 
 **Core Value Proposition:**
 Know exactly where to go, every time. See real-time availability, contribute data for points, and save seats for friends arriving soon.
@@ -313,7 +313,7 @@ import { API_BASE_URL } from '@/constants/config';
 
 ### UI Component & Animation Standards
 
-**CRITICAL:** SpotSave must have production-grade UI polish comparable to shadcn/ui or Aceternity UI.
+**CRITICAL:** Havn must have production-grade UI polish comparable to shadcn/ui or Aceternity UI.
 
 **1. Component Library - Gluestack UI v2:**
 ```typescript
@@ -1195,9 +1195,9 @@ GIN_MODE=release
 # Database
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=spotsave
+DB_USER=havn
 DB_PASSWORD=secure_password
-DB_NAME=spotsave_prod
+DB_NAME=havn_prod
 
 # Redis
 REDIS_HOST=localhost
@@ -1210,7 +1210,7 @@ JWT_EXPIRY_HOURS=168
 
 # AWS S3 (for photo uploads)
 AWS_REGION=us-east-1
-AWS_BUCKET=spotsave-photos
+AWS_BUCKET=havn-photos
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 
@@ -1223,8 +1223,8 @@ ENV=production
 
 **Frontend (.env):**
 ```
-API_BASE_URL=https://api.spotsave.app/api
-WS_URL=wss://api.spotsave.app/ws
+API_BASE_URL=https://api.havn.app/api
+WS_URL=wss://api.havn.app/ws
 SENTRY_DSN=
 MIXPANEL_TOKEN=
 ENV=production
@@ -1252,7 +1252,7 @@ npx react-native run-ios  # or run-android
 
 **Run Database Migrations:**
 ```bash
-migrate -path migrations -database "postgresql://user:pass@localhost:5432/spotsave?sslmode=disable" up
+migrate -path migrations -database "postgresql://user:pass@localhost:5432/havn?sslmode=disable" up
 ```
 
 **Run Tests:**

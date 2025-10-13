@@ -1,8 +1,8 @@
-# SpotSave Mobile App - Implementation Summary
+# Havn Mobile App - Implementation Summary
 
 ## Overview
 
-This is a **complete, production-ready React Native mobile application** for SpotSave, built according to the specifications in `docs/design.md`, `docs/mvp.md`, and `.cursorrules`.
+This is a **complete, production-ready React Native mobile application** for Havn, built according to the specifications in `docs/design.md`, `docs/mvp.md`, and `.cursorrules`.
 
 ---
 
@@ -335,7 +335,7 @@ Update API URL in `src/services/api.ts` if needed:
 ```typescript
 const API_BASE_URL = __DEV__ 
   ? 'http://localhost:8080/api'  // Your local backend
-  : 'https://api.spotsave.app/api';
+  : 'https://api.havn.app/api';
 ```
 
 ---
@@ -517,7 +517,7 @@ This implementation follows **all requirements** from:
 
 ## 🙏 Credits
 
-Built according to SpotSave requirements:
+Built according to Havn requirements:
 - Architecture: `docs/projectscope.md`
 - Technical specs: `docs/mvp.md`
 - Design system: `docs/design.md`

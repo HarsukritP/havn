@@ -1,4 +1,4 @@
-# SpotSave MVP - Development Roadmap
+# Havn MVP - Development Roadmap
 
 ## MVP Philosophy
 
@@ -446,8 +446,8 @@ CREATE INDEX idx_user_achievements ON user_achievements(user_id, unlocked_at DES
 
 ### Base URL
 - **Development:** `http://localhost:8080/api`
-- **Staging:** `https://staging.spotsave.app/api`
-- **Production:** `https://api.spotsave.app/api`
+- **Staging:** `https://staging.havn.app/api`
+- **Production:** `https://api.havn.app/api`
 
 ### Response Format
 
@@ -830,7 +830,7 @@ Get top users by points (weekly or all-time).
 
 ### Connection
 
-**URL:** `ws://localhost:8080/ws` or `wss://api.spotsave.app/ws`
+**URL:** `ws://localhost:8080/ws` or `wss://api.havn.app/ws`
 
 **Authentication:**
 - Send JWT token in first message after connection

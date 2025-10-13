@@ -1,6 +1,6 @@
-# SpotSave Backend API
+# Havn Backend API
 
-Go backend API for SpotSave - Real-time study spot availability platform.
+Go backend API for Havn - Real-time study spot availability platform.
 
 ## Tech Stack
 
@@ -91,9 +91,9 @@ GIN_MODE=debug
 # Database
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=spotsave
-DB_PASSWORD=spotsave_dev
-DB_NAME=spotsave_dev
+DB_USER=havn
+DB_PASSWORD=havn_dev
+DB_NAME=havn_dev
 DB_SSLMODE=disable
 
 # Redis
@@ -114,7 +114,7 @@ go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@lat
 
 # Run migrations
 migrate -path migrations \
-  -database "postgresql://spotsave:spotsave_dev@localhost:5432/spotsave_dev?sslmode=disable" \
+  -database "postgresql://havn:havn_dev@localhost:5432/havn_dev?sslmode=disable" \
   up
 ```
 
@@ -242,7 +242,7 @@ make lint
 
 ```bash
 migrate -path migrations \
-  -database "postgresql://spotsave:spotsave_dev@localhost:5432/spotsave_dev?sslmode=disable" \
+  -database "postgresql://havn:havn_dev@localhost:5432/havn_dev?sslmode=disable" \
   up
 ```
 
@@ -250,7 +250,7 @@ migrate -path migrations \
 
 ```bash
 migrate -path migrations \
-  -database "postgresql://spotsave:spotsave_dev@localhost:5432/spotsave_dev?sslmode=disable" \
+  -database "postgresql://havn:havn_dev@localhost:5432/havn_dev?sslmode=disable" \
   down 1
 ```
 
@@ -272,7 +272,7 @@ go test -v ./...
 ### Build Docker Image
 
 ```bash
-docker build -t spotsave-backend .
+docker build -t havn-backend .
 ```
 
 ### Run with Docker
@@ -281,7 +281,7 @@ docker build -t spotsave-backend .
 docker run -p 8080:8080 \
   -e DB_HOST=host.docker.internal \
   -e REDIS_HOST=host.docker.internal \
-  spotsave-backend
+  havn-backend
 ```
 
 ## Environment Variables
@@ -292,9 +292,9 @@ docker run -p 8080:8080 \
 | `GIN_MODE` | Gin mode (debug/release) | `debug` |
 | `DB_HOST` | PostgreSQL host | `localhost` |
 | `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_USER` | Database user | `spotsave` |
-| `DB_PASSWORD` | Database password | `spotsave_dev` |
-| `DB_NAME` | Database name | `spotsave_dev` |
+| `DB_USER` | Database user | `havn` |
+| `DB_PASSWORD` | Database password | `havn_dev` |
+| `DB_NAME` | Database name | `havn_dev` |
 | `REDIS_HOST` | Redis host | `localhost` |
 | `REDIS_PORT` | Redis port | `6379` |
 | `JWT_SECRET` | JWT signing secret | Required |
@@ -325,7 +325,7 @@ docker run -p 8080:8080 \
 docker ps | grep postgres
 
 # Check database connection
-psql -h localhost -U spotsave -d spotsave_dev
+psql -h localhost -U havn -d havn_dev
 ```
 
 ### Redis Connection Issues

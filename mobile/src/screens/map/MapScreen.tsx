@@ -45,7 +45,7 @@ export const MapScreen: React.FC = () => {
       if (status !== 'granted') {
         Alert.alert(
           'Location Permission Required',
-          'SpotSave needs your location to show nearby study spots.',
+          'Havn needs your location to show nearby study spots.',
           [{ text: 'OK' }]
         );
         return;
