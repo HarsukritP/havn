@@ -74,3 +74,27 @@ export interface UpdateSpotRequest {
   user_longitude: number;
 }
 
+// Navigation
+export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  MainTabs: undefined;
+};
+
+export type MainTabParamList = {
+  Map: undefined;
+  List: undefined;
+  Profile: undefined;
+};
+
+export type MapStackParamList = {
+  MapView: undefined;
+  SpotDetail: { spotId: string };
+};
+
+// WebSocket
+export interface WebSocketMessage {
+  type: 'SPOT_UPDATE' | 'NEW_USER' | 'ACHIEVEMENT';
+  data: any;
+}
+

@@ -19,7 +19,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('jwt_token');
+      const token = await AsyncStorage.getItem('@spotsave_auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -43,7 +43,8 @@ api.interceptors.response.use(
     if (error.response) {
       // Handle 401 Unauthorized (token expired)
       if (error.response.status === 401) {
-        await AsyncStorage.removeItem('jwt_token');
+        await AsyncStorage.removeItem('@spotsave_auth_token');
+        await AsyncStorage.removeItem('@spotsave_auth_user');
         // TODO: Navigate to login screen
       }
       
