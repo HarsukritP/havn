@@ -1,41 +1,33 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { GluestackUIProvider } from '@gluestack-ui/themed';
-import { config } from '@gluestack-ui/config';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-import AppNavigator from './src/navigation/AppNavigator';
-import { useAuthStore } from './src/store/authStore';
-
-// Create React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 export default function App() {
-  const { loadAuth } = useAuthStore();
-
-  // Load auth state on app start
-  useEffect(() => {
-    loadAuth();
-  }, []);
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <GluestackUIProvider config={config}>
-          <StatusBar style="auto" />
-          <AppNavigator />
-        </GluestackUIProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <View style={styles.container}>
+      <Text style={styles.title}>🎯 Havn</Text>
+      <Text style={styles.subtitle}>Mobile app is loading...</Text>
+      <StatusBar style="auto" />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#E0E7FF',
+  },
+});
 

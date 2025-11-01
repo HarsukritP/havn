@@ -1,0 +1,36 @@
+# Copy these EXACT variables to Railway Backend Service → Variables tab
+# Click "+ New Variable" for each one
+
+# 1. JWT Secret (CRITICAL - Already generated for you!)
+JWT_SECRET=NNV6n2ND4MWAX799j7a1UKYlm1zzW6SJTsWZfmpQgY62NX+1FAHQAGTVsg1jawd3bmY7EgMU1dUS+lstDbqaOA==
+
+# 2. Database URL (Type EXACTLY as shown - Railway will replace it automatically)
+DATABASE_URL=${{ Postgres.DATABASE_URL }}
+
+# 3. JWT Expiry (in hours)
+JWT_EXPIRY_HOURS=168
+
+# 4. Server Port
+PORT=8080
+
+# 5. Gin Mode (production)
+GIN_MODE=release
+
+# 6. Database SSL Mode (Railway requires SSL)
+DB_SSL_MODE=require
+
+# 7. Environment
+ENV=production
+
+# =========================================
+# HOW TO ADD THESE TO RAILWAY:
+# =========================================
+# 1. Go to your Railway project
+# 2. Click on your BACKEND service (not PostgreSQL)
+# 3. Click "Variables" tab
+# 4. Click "+ New Variable"
+# 5. Copy/paste each NAME and VALUE above
+# 6. Click "Add" for each one
+# 7. Railway will auto-redeploy your backend
+# =========================================
+

@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "strict PropertyInitialization": true,
+    "strictPropertyInitialization": true,
     "strictBindCallApply": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -21,10 +21,16 @@
     "isolatedModules": true,
     "jsx": "react-native",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
-
