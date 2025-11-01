@@ -148,14 +148,16 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	expiresAt := claims["exp"].(float64)
 	ttl := time.Until(time.Unix(int64(expiresAt), 0))
 
-	if ttl > 0 {
-		// Add token to blacklist in Redis
+	if ttl > 0 && s.redis != nil {
+		// Add token to blacklist in Redis (if Redis is available)
 		key := fmt.Sprintf("blacklist:%s", token)
 		if err := s.redis.Set(ctx, key, "1", ttl).Err(); err != nil {
 			return fmt.Errorf("failed to blacklist token: %w", err)
 		}
 	}
 
+	// Without Redis, token blacklisting is not supported
+	// Token will remain valid until expiration
 	return nil
 }
 
@@ -210,6 +212,11 @@ func (s *AuthService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 
 // IsTokenBlacklisted checks if a token has been blacklisted
 func (s *AuthService) IsTokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	// If Redis is not available, no tokens are blacklisted
+	if s.redis == nil {
+		return false, nil
+	}
+
 	key := fmt.Sprintf("blacklist:%s", token)
 	exists, err := s.redis.Exists(ctx, key).Result()
 	if err != nil {

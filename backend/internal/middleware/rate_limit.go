@@ -13,6 +13,12 @@ import (
 // RateLimiter middleware limits requests per IP
 func RateLimiter(redis *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// If Redis is not available, skip rate limiting (MVP mode)
+		if redis == nil {
+			c.Next()
+			return
+		}
+
 		ip := c.ClientIP()
 		key := fmt.Sprintf("rate_limit:%s", ip)
 

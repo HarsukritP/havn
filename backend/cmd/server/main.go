@@ -34,21 +34,31 @@ func main() {
 
 	log.Println("✓ Connected to PostgreSQL database")
 
-	// Initialize Redis client
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     getEnv("REDIS_HOST", "localhost") + ":" + getEnv("REDIS_PORT", "6379"),
-		Password: getEnv("REDIS_PASSWORD", ""),
-		DB:       0,
-	})
+	// Initialize Redis client (optional for MVP)
+	var redisClient *redis.Client
+	redisAddr := getEnv("REDIS_HOST", "") + ":" + getEnv("REDIS_PORT", "6379")
+	
+	// Only try to connect if REDIS_HOST is explicitly set
+	if getEnv("REDIS_HOST", "") != "" {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr:     redisAddr,
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       0,
+		})
 
-	// Test Redis connection
-	ctx := context.Background()
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		log.Fatal("Failed to connect to Redis:", err)
+		// Test Redis connection
+		ctx := context.Background()
+		if err := redisClient.Ping(ctx).Err(); err != nil {
+			log.Printf("⚠️  Redis connection failed: %v", err)
+			log.Println("⚠️  Running without Redis (caching and WebSocket pub/sub disabled)")
+			redisClient = nil
+		} else {
+			defer redisClient.Close()
+			log.Println("✓ Connected to Redis")
+		}
+	} else {
+		log.Println("⚠️  REDIS_HOST not set, running without Redis (MVP mode)")
 	}
-	defer redisClient.Close()
-
-	log.Println("✓ Connected to Redis")
 
 	// Initialize services
 	authService := services.NewAuthService(db, redisClient)

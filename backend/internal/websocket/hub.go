@@ -35,23 +35,27 @@ func (h *Hub) Register(client *Client) {
 
 // Run starts the hub's main loop
 func (h *Hub) Run() {
-	// Subscribe to Redis pub/sub for spot updates
-	ctx := context.Background()
-	pubsub := h.redis.Subscribe(ctx, "spot_updates")
-	defer pubsub.Close()
+	// Subscribe to Redis pub/sub for spot updates (if Redis is available)
+	if h.redis != nil {
+		ctx := context.Background()
+		pubsub := h.redis.Subscribe(ctx, "spot_updates")
+		defer pubsub.Close()
 
-	go func() {
-		for {
-			msg, err := pubsub.ReceiveMessage(ctx)
-			if err != nil {
-				log.Printf("Error receiving Redis message: %v", err)
-				continue
+		go func() {
+			for {
+				msg, err := pubsub.ReceiveMessage(ctx)
+				if err != nil {
+					log.Printf("Error receiving Redis message: %v", err)
+					continue
+				}
+
+				// Broadcast message to all connected clients
+				h.broadcast <- []byte(msg.Payload)
 			}
-
-			// Broadcast message to all connected clients
-			h.broadcast <- []byte(msg.Payload)
-		}
-	}()
+		}()
+	} else {
+		log.Println("WebSocket hub running in single-instance mode (no Redis)")
+	}
 
 	// Main hub loop
 	for {
@@ -83,8 +87,6 @@ func (h *Hub) Run() {
 
 // BroadcastSpotUpdate publishes a spot update to Redis (which will broadcast to all connected clients)
 func (h *Hub) BroadcastSpotUpdate(spotID string, data interface{}) error {
-	ctx := context.Background()
-	
 	message := map[string]interface{}{
 		"type": "spot_update",
 		"data": data,
@@ -95,6 +97,14 @@ func (h *Hub) BroadcastSpotUpdate(spotID string, data interface{}) error {
 		return err
 	}
 
-	return h.redis.Publish(ctx, "spot_updates", jsonData).Err()
+	// If Redis is available, publish to Redis for multi-instance support
+	if h.redis != nil {
+		ctx := context.Background()
+		return h.redis.Publish(ctx, "spot_updates", jsonData).Err()
+	}
+
+	// Otherwise, broadcast directly to connected clients (single instance)
+	h.broadcast <- jsonData
+	return nil
 }
 
