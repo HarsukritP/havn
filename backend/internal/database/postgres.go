@@ -10,40 +10,49 @@ import (
 
 // NewPostgresDB creates a new PostgreSQL database connection
 func NewPostgresDB() (*sql.DB, error) {
-	host := os.Getenv("DB_HOST")
-	if host == "" {
-		host = "localhost"
-	}
+	var connStr string
 
-	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "5432"
-	}
+	// Check for DATABASE_URL first (Railway, Heroku, etc.)
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL != "" {
+		connStr = databaseURL
+	} else {
+		// Fall back to individual env vars for local development
+		host := os.Getenv("DB_HOST")
+		if host == "" {
+			host = "localhost"
+		}
 
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = "havn"
-	}
+		port := os.Getenv("DB_PORT")
+		if port == "" {
+			port = "5432"
+		}
 
-	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		password = "havn_dev"
-	}
+		user := os.Getenv("DB_USER")
+		if user == "" {
+			user = "havn"
+		}
 
-	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		dbname = "havn_dev"
-	}
+		password := os.Getenv("DB_PASSWORD")
+		if password == "" {
+			password = "havn_dev"
+		}
 
-	sslmode := os.Getenv("DB_SSLMODE")
-	if sslmode == "" {
-		sslmode = "disable"
-	}
+		dbname := os.Getenv("DB_NAME")
+		if dbname == "" {
+			dbname = "havn_dev"
+		}
 
-	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		host, port, user, password, dbname, sslmode,
-	)
+		sslmode := os.Getenv("DB_SSLMODE")
+		if sslmode == "" {
+			sslmode = "disable"
+		}
+
+		connStr = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			host, port, user, password, dbname, sslmode,
+		)
+	}
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
