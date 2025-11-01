@@ -28,6 +28,11 @@ func NewHub(redis *redis.Client) *Hub {
 	}
 }
 
+// Register registers a client with the hub
+func (h *Hub) Register(client *Client) {
+	h.register <- client
+}
+
 // Run starts the hub's main loop
 func (h *Hub) Run() {
 	// Subscribe to Redis pub/sub for spot updates

@@ -16,10 +16,26 @@ const (
 
 // Client represents a WebSocket client
 type Client struct {
-	hub  *Hub
-	conn *websocket.Conn
-	send chan []byte
+	hub    *Hub
+	conn   *websocket.Conn
+	send   chan []byte
 	userID string
+}
+
+// NewClient creates a new WebSocket client
+func NewClient(hub *Hub, conn *websocket.Conn, userID string) *Client {
+	return &Client{
+		hub:    hub,
+		conn:   conn,
+		send:   make(chan []byte, 256),
+		userID: userID,
+	}
+}
+
+// Start begins the client's read and write pumps
+func (c *Client) Start() {
+	go c.writePump()
+	go c.readPump()
 }
 
 // readPump pumps messages from the WebSocket connection to the hub

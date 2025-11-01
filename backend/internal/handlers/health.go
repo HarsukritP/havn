@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/HarsukritP/havn/backend/internal/models"
 	"github.com/gin-gonic/gin"

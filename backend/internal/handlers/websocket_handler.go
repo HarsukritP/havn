@@ -33,16 +33,20 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 		return
 	}
 
-	client := &websocket.Client{
-		conn: conn,
-		send: make(chan []byte, 256),
+	// Get user ID from context (if authenticated)
+	userID := ""
+	if id, exists := c.Get("user_id"); exists {
+		userID = id.(string)
 	}
 
-	h.hub.register <- client
+	// Create new client
+	client := websocket.NewClient(h.hub, conn, userID)
+	
+	// Register client with hub
+	h.hub.Register(client)
 
 	// Start client read and write pumps
-	go client.writePump()
-	go client.readPump()
+	client.Start()
 
 	log.Println("New WebSocket connection established")
 }
