@@ -183,7 +183,6 @@ func getEnv(key, defaultValue string) string {
 // runMigrations runs database setup migrations (temporary for initial deployment)
 func runMigrations(db *sql.DB) {
 	migrations := []string{
-		`CREATE EXTENSION IF NOT EXISTS postgis;`,
 		`CREATE TABLE IF NOT EXISTS users (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			email VARCHAR(255) UNIQUE NOT NULL,
@@ -205,7 +204,6 @@ func runMigrations(db *sql.DB) {
 			address VARCHAR(500),
 			latitude DECIMAL(10, 8) NOT NULL,
 			longitude DECIMAL(11, 8) NOT NULL,
-			location GEOGRAPHY(POINT, 4326),
 			total_capacity INTEGER NOT NULL DEFAULT 50,
 			current_available INTEGER,
 			spot_type VARCHAR(50) DEFAULT 'library',
@@ -221,18 +219,7 @@ func runMigrations(db *sql.DB) {
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 		);`,
-		`CREATE INDEX IF NOT EXISTS idx_study_spots_location ON study_spots USING GIST(location);`,
-		`CREATE OR REPLACE FUNCTION sync_location_from_lat_lng()
-		RETURNS TRIGGER AS $$
-		BEGIN
-			NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
-			RETURN NEW;
-		END;
-		$$ LANGUAGE plpgsql;`,
-		`CREATE TRIGGER IF NOT EXISTS trigger_sync_location_from_lat_lng
-		BEFORE INSERT OR UPDATE ON study_spots
-		FOR EACH ROW
-		EXECUTE FUNCTION sync_location_from_lat_lng();`,
+		`CREATE INDEX IF NOT EXISTS idx_study_spots_lat_lng ON study_spots (latitude, longitude);`,
 	}
 
 	for i, migration := range migrations {
