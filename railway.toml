@@ -1,0 +1,13 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "go build -o main cmd/api/main.go"
+
+[deploy]
+startCommand = "./main"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "havn-backend"
+rootDirectory = "/backend"
+
