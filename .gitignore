@@ -1,220 +1,47 @@
-# Havn - Comprehensive .gitignore
-
-# ============================================
-# Environment Variables (NEVER COMMIT SECRETS)
-# ============================================
+# Environment variables (NEVER commit these!)
 .env
 .env.local
 .env.*.local
-.env.production
-.env.staging
-*.env
 
-# ============================================
-# Backend (Go)
-# ============================================
+# Dependencies
+node_modules/
+vendor/
 
-# Binaries
+# Build outputs
+dist/
+build/
 *.exe
-*.exe~
 *.dll
 *.so
 *.dylib
-backend/bin/
-backend/tmp/
 
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool
-*.out
-
-# Dependency directories
-backend/vendor/
-
-# Go workspace file
-go.work
-
-# Build artifacts
-backend/dist/
-backend/build/
-
-# ============================================
-# Frontend (React Native)
-# ============================================
-
-# Dependencies
-mobile/node_modules/
-mobile/.pnp
-mobile/.pnp.js
-
-# Testing
-mobile/coverage/
-mobile/.nyc_output/
-
-# Production
-mobile/build/
-mobile/dist/
-
-# Expo
-mobile/.expo/
-mobile/.expo-shared/
-mobile/web-build/
-
-# Metro
-mobile/.metro-health-check*
-
-# React Native
-mobile/ios/Pods/
-mobile/ios/build/
-mobile/android/.gradle/
-mobile/android/build/
-mobile/android/app/build/
-mobile/android/.idea/
-mobile/android/local.properties
-
-# Fastlane
-mobile/ios/fastlane/report.xml
-mobile/ios/fastlane/Preview.html
-mobile/ios/fastlane/screenshots
-mobile/ios/fastlane/test_output
-mobile/android/fastlane/report.xml
-mobile/android/fastlane/Preview.html
-mobile/android/fastlane/screenshots
-mobile/android/fastlane/test_output
-
-# Bundle artifacts
-mobile/*.jsbundle
-
-# CocoaPods
-mobile/ios/Pods/
-mobile/ios/Podfile.lock
-
-# ============================================
-# IDEs and Editors
-# ============================================
-
-# VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# Cursor
-.cursor/
-
-# IntelliJ IDEA / GoLand / WebStorm
+# IDE
+.vscode/
 .idea/
-*.iml
-*.iws
-*.ipr
-
-# Vim
 *.swp
 *.swo
 *~
 
-# Emacs
-*~
-\#*\#
-.\#*
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# ============================================
-# macOS
-# ============================================
+# OS
 .DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Thumbnails
 Thumbs.db
 
-# ============================================
-# Linux
-# ============================================
-*~
-.directory
-.Trash-*
-
-# ============================================
-# Windows
-# ============================================
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# ============================================
-# Docker
-# ============================================
-docker-compose.override.yml
-
-# ============================================
-# Database
-# ============================================
-*.sqlite
-*.sqlite3
-*.db
-
-# PostgreSQL dumps
-*.sql.dump
-*.sql.gz
-
-# ============================================
 # Logs
-# ============================================
-logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-pnpm-debug.log*
+logs/
 
-# ============================================
-# Misc
-# ============================================
-.cache/
-.temp/
-.tmp/
+# Testing
+coverage/
+.nyc_output/
 
-# Lock files (commit package-lock.json but not others)
-# yarn.lock
-# pnpm-lock.yaml
+# Temporary files
+tmp/
+temp/
+*.tmp
 
-# Bundle analysis
-bundle-report.html
-stats.json
-
-# Sentry
-.sentryclirc
-
-# ============================================
-# Generated files (DO NOT COMMIT)
-# ============================================
-backend/tmp/
-mobile/tmp/
-
-# API keys and secrets
-**/secrets.yml
-**/credentials.yml
-
-# SSL certificates
+# Secrets
 *.pem
 *.key
-*.crt
-*.cert
+secrets/
 
-# ============================================
-# Keep certain files
-# ============================================
-!.gitkeep
-!.env.example
 

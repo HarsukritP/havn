@@ -4,63 +4,44 @@ import (
 	"time"
 )
 
-// User represents a registered user
-type User struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	PasswordHash string `json:"-"` // Never send password hash in JSON
-	FullName  string    `json:"full_name"`
-	
-	// Gamification
-	TotalPoints      int     `json:"total_points"`
-	CurrentStreak    int     `json:"current_streak"`
-	LastCheckInDate  *time.Time `json:"last_check_in_date,omitempty"`
-	ReputationScore  float64 `json:"reputation_score"`
-	
-	// Metadata
-	EmailVerified bool      `json:"email_verified"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	LastLoginAt   *time.Time `json:"last_login_at,omitempty"`
+// Profile represents a user profile
+type Profile struct {
+	ID              string     `json:"id" gorm:"primaryKey;type:uuid"`
+	Username        string     `json:"username" gorm:"type:varchar(20);unique;not null"`
+	FullName        string     `json:"full_name,omitempty" gorm:"type:varchar(100)"`
+	AvatarURL       string     `json:"avatar_url,omitempty"`
+	UniversityID    *string    `json:"university_id,omitempty" gorm:"type:uuid"`
+	GraduationYear  int        `json:"graduation_year,omitempty"`
+	Major           string     `json:"major,omitempty" gorm:"type:varchar(100)"`
+	Bio             string     `json:"bio,omitempty"`
+	LocationSharing string     `json:"location_sharing" gorm:"type:varchar(20);default:'friends'"`
+	CurrentSpotID   *string    `json:"current_spot_id,omitempty" gorm:"type:uuid"`
+	CheckedInAt     *time.Time `json:"checked_in_at,omitempty"`
+	PushToken       string     `json:"push_token,omitempty"`
+	Preferences     JSONB      `json:"preferences" gorm:"type:jsonb"`
+	CreatedAt       time.Time  `json:"created_at" gorm:"default:now()"`
+	UpdatedAt       time.Time  `json:"updated_at" gorm:"default:now()"`
 }
 
-// RegisterRequest represents a user registration request
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-	FullName string `json:"full_name" binding:"required,min=2"`
+// TableName specifies the table name for GORM
+func (Profile) TableName() string {
+	return "profiles"
 }
 
-// LoginRequest represents a user login request
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+// Friendship represents a friendship between users
+type Friendship struct {
+	ID          string     `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	UserID      string     `json:"user_id" gorm:"type:uuid;not null"`
+	FriendID    string     `json:"friend_id" gorm:"type:uuid;not null"`
+	Status      string     `json:"status" gorm:"type:varchar(20);default:'pending'"`
+	RequestedAt time.Time  `json:"requested_at" gorm:"default:now()"`
+	RespondedAt *time.Time `json:"responded_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at" gorm:"default:now()"`
+	UpdatedAt   time.Time  `json:"updated_at" gorm:"default:now()"`
 }
 
-// UpdateUserRequest represents a user profile update request
-type UpdateUserRequest struct {
-	FullName *string `json:"full_name,omitempty"`
-	Email    *string `json:"email,omitempty" binding:"omitempty,email"`
-}
-
-// UserStats represents user statistics
-type UserStats struct {
-	TotalCheckIns      int     `json:"total_check_ins"`
-	CheckInsThisWeek   int     `json:"check_ins_this_week"`
-	CheckInsToday      int     `json:"check_ins_today"`
-	AccuracyRate       float64 `json:"accuracy_rate"`
-	RankPercentile     int     `json:"rank_percentile"`
-	AchievementsUnlocked int   `json:"achievements_unlocked"`
-}
-
-// LeaderboardEntry represents a user's position on the leaderboard
-type LeaderboardEntry struct {
-	Rank            int     `json:"rank"`
-	UserID          string  `json:"user_id"`
-	FullName        string  `json:"full_name"` // Partially obscured
-	Points          int     `json:"points"`
-	CheckIns        int     `json:"check_ins"`
-	ReputationScore float64 `json:"reputation_score"`
-	IsCurrentUser   bool    `json:"is_current_user,omitempty"`
+// TableName specifies the table name for GORM
+func (Friendship) TableName() string {
+	return "friendships"
 }
 

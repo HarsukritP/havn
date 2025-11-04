@@ -1,1370 +1,712 @@
-# Havn MVP - Development Roadmap
+# havn MVP - Development Roadmap
 
 ## MVP Philosophy
 
-**Core Principle:** Ship the minimum feature set that proves the core value proposition—helping students find study spots faster than wandering campus.
+**Goal**: Ship a functional, delightful MVP in **10-12 weeks** that solves the core problem: *"Help UW students find available study spots and coordinate with friends in real-time."*
 
-**What Makes a Good MVP:**
-- ✅ Solves the primary pain point (finding available spots)
-- ✅ Demonstrates the core innovation (crowdsourced real-time data)
-- ✅ Creates a feedback loop (gamification incentivizes contributions)
-- ✅ Can be built in 4 weeks with 1-2 developers
-- ✅ Testable with 50-100 beta users
+**What to Build**: The minimum feature set that validates our core hypothesis  
+**What NOT to Build**: Everything else (reviews, analytics, predictions, gamification)
 
-**What We're NOT Building (Yet):**
-- Spot-saving marketplace (social coordination)
-- Study matching (proximity-based)
-- ML predictions (requires historical data)
-- Premium features (monetization)
-- Multi-campus support (scale later)
-
-**Success Criteria for MVP Launch:**
-1. 500+ registered users within first 2 weeks
-2. 100+ daily active users by week 4
-3. 1,000+ check-ins per week (proves crowdsourcing works)
-4. 80%+ data accuracy (verified via manual spot-checks)
-5. <5% crash rate (app stability)
+**Success Criteria**:
+- 500 registered users within 30 days of launch
+- 200 DAU (40% daily active ratio)
+- 50+ study spots with real-time occupancy data
+- 10+ spot save requests per day
+- < 2% crash rate
+- App Store rating > 4.0 stars
 
 ---
 
-## Week-by-Week Development Roadmap
+## MVP Feature Set (What to Build)
 
-### **Week 1: Backend Foundation**
+### ✅ Core Features (Must-Have)
 
-**Goal:** Production-ready API with auth and core endpoints
+#### 1. User Authentication & Onboarding
+**What**:
+- Email/password sign up and login
+- Google OAuth (for UW students with @uw.edu email)
+- Profile setup (name, grad year, major, avatar upload)
+- Location permissions request
+- Simple 3-screen onboarding tutorial
 
-**Day 1-2: Project Setup**
-- Initialize Go module with Gin framework
-- Set up PostgreSQL with PostGIS extension
-- Set up Redis for caching and sessions
-- Docker Compose for local development
-- Project structure:
-  ```
-  backend/
-  ├── cmd/
-  │   └── server/
-  │       └── main.go
-  ├── internal/
-  │   ├── handlers/     # HTTP request handlers
-  │   ├── services/     # Business logic
-  │   ├── models/       # Database models
-  │   ├── middleware/   # Auth, logging, CORS
-  │   └── database/     # DB connection, migrations
-  ├── migrations/       # SQL migration files
-  ├── config/           # Configuration management
-  └── Dockerfile
-  ```
-- Environment variables setup (`.env.example`)
-- Logging infrastructure (structured JSON logs)
+**Why**: Necessary for personalization, social features, and privacy
 
-**Day 3-4: Database Schema & Migrations**
-- Create all database tables (see schema below)
-- Seed initial data (20-30 campus study spots)
-- Write migration files (up/down)
-- Geospatial indexes for location queries
-- Test migrations (up, down, up again)
-
-**Day 5-7: Authentication System**
-- POST `/api/auth/register` - Create user account
-- POST `/api/auth/login` - JWT token generation
-- POST `/api/auth/logout` - Token blacklist (Redis)
-- Middleware for JWT validation
-- Password hashing (bcrypt)
-- Email verification (optional for MVP, send email but don't require click)
-- Rate limiting (10 requests/min per IP for auth endpoints)
-
-**Deliverables:**
-- Running backend server on `localhost:8080`
-- PostgreSQL database with seed data
-- Working authentication flow
-- Postman collection with example requests
-- Health check endpoint (`GET /api/health`)
+**Complexity**: 🟢 Low (Supabase Auth handles most of this)
 
 ---
 
-### **Week 2: Frontend Foundation**
+#### 2. Study Spot Discovery & Map View
+**What**:
+- Interactive map (Mapbox) showing UW campus
+- Markers for study spots (color-coded by occupancy)
+  - 🟢 Green: Low occupancy (0-33%)
+  - 🟡 Yellow: Medium occupancy (34-66%)
+  - 🔴 Red: High occupancy (67-100%)
+- List view toggle (alternative to map)
+- Basic filters:
+  - Distance from me (500m, 1km, 2km, All)
+  - Spot type (Library, Cafe, Lounge, Outdoor, All)
+  - Availability (Available only / All)
 
-**Goal:** React Native app with navigation, API integration, and map view
+**Why**: Core value prop - finding spots at a glance
 
-**Day 1-2: React Native Setup**
-- Initialize React Native project (TypeScript template)
-- Set up React Navigation (bottom tabs + stack)
-- Configure TypeScript strict mode
-- Set up ESLint + Prettier
-- Folder structure:
-  ```
-  mobile/
-  ├── src/
-  │   ├── screens/
-  │   │   ├── MapScreen.tsx
-  │   │   ├── ListScreen.tsx
-  │   │   ├── ProfileScreen.tsx
-  │   │   └── auth/
-  │   │       ├── LoginScreen.tsx
-  │   │       └── RegisterScreen.tsx
-  │   ├── components/
-  │   │   ├── SpotMarker.tsx
-  │   │   ├── SpotCard.tsx
-  │   │   └── CheckInModal.tsx
-  │   ├── services/
-  │   │   ├── api.ts         # Axios instance with interceptors
-  │   │   ├── auth.ts        # Auth API calls
-  │   │   ├── spots.ts       # Spot API calls
-  │   │   └── websocket.ts   # WebSocket client
-  │   ├── types/             # TypeScript interfaces
-  │   ├── store/             # Zustand stores
-  │   ├── utils/             # Helpers, formatters
-  │   └── constants/         # Colors, config
-  ├── App.tsx
-  └── package.json
-  ```
-- Environment variables (API base URL)
+**Complexity**: 🟡 Medium (map integration, geospatial queries)
 
-**Day 3-4: API Layer & Authentication UI**
-- Axios setup with auth interceptors
-- AsyncStorage for JWT persistence
-- Login/Register screens (simple forms)
-- Auth context/store (Zustand)
-- Auto-login on app launch (check stored token)
-- Loading states and error handling
-
-**Day 5-7: Map View Implementation**
-- Install `react-native-maps`
-- MapScreen with user location
-- Fetch spots from API (`GET /api/spots`)
-- Display spots as map markers
-- Color-code markers by availability (green/yellow/red)
-- Tap marker to show spot name in callout
-- "My Location" button (re-center map)
-- Pull-to-refresh to reload spot data
-
-**Deliverables:**
-- Functional login/register flow
-- Map view displaying seeded study spots
-- User location indicator
-- Color-coded availability markers
-- Build running on iOS simulator and/or Android emulator
+**Key Technical Requirements**:
+- PostGIS queries: `ST_DWithin` for proximity filtering
+- Efficient marker clustering for 50+ spots
+- Real-time marker updates via Supabase Realtime
 
 ---
 
-### **Week 3: User System & Data Quality**
+#### 3. Study Spot Details
+**What**:
+- Spot name, address, building
+- Current occupancy count + percentage
+- Estimated capacity
+- Amenities (icons):
+  - 🔌 Power outlets
+  - 📶 WiFi quality
+  - 🔇 Noise level (Quiet/Moderate/Loud)
+  - ☕ Food/drink nearby
+  - 🚪 24/7 access
+- Hours of operation
+- Distance from current location
+- "Navigate" button (opens Apple/Google Maps)
+- "Check In Here" button (mark yourself as present)
 
-**Goal:** Complete check-in flow, gamification, and data confidence system
+**Why**: Users need details to decide if a spot fits their needs
 
-**Day 1-2: Backend - Spot Updates & Geofencing**
-- POST `/api/spots/:id/update` - Submit availability update
-- Geofencing validation (must be within 100m of spot)
-- Update confidence scoring algorithm
-- Store update history in `spot_updates` table
-- Calculate and cache current availability in Redis
-- Return updated spot data with confidence score
-
-**Day 3-4: Frontend - Check-In Flow**
-- Bottom sheet modal for check-ins
-- Number picker for "How many seats available?"
-- Noise level selector (Quiet, Moderate, Loud)
-- Submit button with loading state
-- Geolocation permission request
-- Geofence validation (show error if too far away)
-- Optimistic UI update (instantly show new availability)
-- Success animation (+5 points!)
-
-**Day 5-6: Gamification System**
-- User points calculation (5 per check-in, +2 accuracy bonus)
-- Streak tracking (consecutive days with check-ins)
-- Profile screen showing:
-  - Total points
-  - Current streak
-  - Total check-ins this week
-  - Contribution rank (top 10%, top 25%, etc.)
-- Update points in real-time after check-in
-
-**Day 7: Spot Detail Screen**
-- Full-screen spot detail view (tap on marker or list item)
-- Show:
-  - Spot name, address
-  - Current availability (8/20 seats)
-  - Last updated timestamp ("5 min ago")
-  - Confidence indicator (high/medium/low)
-  - Amenities (WiFi, outlets, printer icons)
-  - "Update Availability" button
-- Navigate back to map
-
-**Deliverables:**
-- Working check-in flow (submit updates from mobile app)
-- Points and streaks visible on profile
-- Spot detail screen with all key info
-- Geofencing preventing remote updates
-- Confidence scoring displayed to users
+**Complexity**: 🟢 Low (simple CRUD + UI)
 
 ---
 
-### **Week 4: Polish, Testing & Launch Prep**
+#### 4. Real-Time Occupancy Tracking
+**What**:
+- Automatic check-in when user arrives at spot (geofence-based)
+- Manual check-in option (in case location is imprecise)
+- Auto check-out after 4 hours OR when user leaves geofence
+- Manual check-out button
+- Background location tracking (only when app is active, not always-on)
+- Occupancy count updates every 30 seconds via Supabase Realtime
 
-**Goal:** Production-ready app with smooth UX, performance optimizations, and beta testing
+**Why**: The secret sauce - dynamic occupancy data
 
-**Day 1-2: UX Improvements**
-- Loading skeletons (instead of blank screens)
-- Empty states ("No spots nearby - try zooming out")
-- Error states (network error, geolocation disabled)
-- Offline mode (show cached data with warning banner)
-- Toast notifications (success, error feedback)
-- Smooth animations (modal slide-up, marker bounce)
-- Pull-to-refresh on map and list views
+**Complexity**: 🔴 High (location tracking, battery optimization, real-time sync)
 
-**Day 3: Performance Optimization**
-- Marker clustering (50+ markers → clusters when zoomed out)
-- Lazy loading spot images
-- React Query caching (5-minute stale time for spots)
-- Reduce API calls (only fetch when viewport changes significantly)
-- Optimize map re-renders (memo components)
-- Image compression for spot photos
-
-**Day 4: Backend - WebSocket Real-Time Updates**
-- WebSocket endpoint `/ws` with JWT authentication
-- Redis pub/sub for horizontal scaling
-- Broadcast spot updates to connected clients viewing that area
-- Geohash-based rooms (only send updates for visible region)
-- Frontend: WebSocket client with auto-reconnect
-- Update markers in real-time without refresh
-
-**Day 5: List View Screen**
-- Alternative to map (some users prefer lists)
-- Show spots sorted by distance (nearest first)
-- Filter by availability (only show available spots)
-- Sort by distance, capacity, or recency of update
-- Pull-to-refresh
-- Tap to navigate to Spot Detail
-
-**Day 6: Testing & Bug Fixes**
-- Manual QA testing (full user flows)
-- Test on physical devices (iOS + Android)
-- Fix any crashes, layout issues
-- Test edge cases (no internet, location disabled, empty data)
-- Load testing (backend handles 100 concurrent WebSocket connections)
-
-**Day 7: Beta Launch Prep**
-- Deploy backend to staging (Fly.io or AWS)
-- TestFlight build (iOS) and/or APK (Android)
-- Onboarding for 10-20 beta testers
-- In-app feedback form (simple email mailto link)
-- Analytics setup (Mixpanel basic events: signup, login, check-in, spot_view)
-- Sentry error tracking enabled
-
-**Deliverables:**
-- Production-ready mobile app (iOS + Android builds)
-- Backend deployed to staging environment
-- WebSocket real-time updates working
-- List view alternative to map
-- Beta test with 10-20 users
-- Feedback collection mechanism
-
----
-
-## Detailed Database Schema
-
-### Table: `users`
-
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    
-    -- Gamification
-    total_points INTEGER DEFAULT 0,
-    current_streak INTEGER DEFAULT 0,
-    last_check_in_date DATE,
-    reputation_score DECIMAL(5,2) DEFAULT 50.0, -- 0-100 scale
-    
-    -- Metadata
-    email_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login_at TIMESTAMP,
-    
-    -- Constraints
-    CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    CONSTRAINT points_positive CHECK (total_points >= 0),
-    CONSTRAINT reputation_range CHECK (reputation_score >= 0 AND reputation_score <= 100)
-);
-
--- Indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_reputation ON users(reputation_score DESC);
-CREATE INDEX idx_users_created_at ON users(created_at DESC);
+**Technical Approach**:
+```
+User Location → Geofence Detection → API: POST /occupancy/checkin
+→ PostgreSQL: Insert occupancy_log, Update spot.current_occupancy
+→ Supabase Realtime: Broadcast to all subscribed clients
+→ Mobile UI: Update marker colors
 ```
 
-### Table: `study_spots`
+**Key Considerations**:
+- Battery efficiency: Update location every 5 minutes (not every second)
+- Privacy: Only track when on campus, not off-campus
+- Fallback: If geofence fails, use manual check-in
 
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
+---
 
-CREATE TABLE study_spots (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(200) NOT NULL,
-    description TEXT,
-    address VARCHAR(300),
-    
-    -- Geospatial
-    location GEOGRAPHY(POINT, 4326) NOT NULL, -- PostGIS type
-    latitude DECIMAL(10, 7) NOT NULL,
-    longitude DECIMAL(10, 7) NOT NULL,
-    
-    -- Capacity
-    total_capacity INTEGER NOT NULL,
-    current_available INTEGER, -- cached value, updated frequently
-    
-    -- Amenities (booleans)
-    has_wifi BOOLEAN DEFAULT TRUE,
-    has_outlets BOOLEAN DEFAULT TRUE,
-    has_printer BOOLEAN DEFAULT FALSE,
-    is_quiet_zone BOOLEAN DEFAULT FALSE,
-    is_outdoor BOOLEAN DEFAULT FALSE,
-    
-    -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_update_at TIMESTAMP, -- last time someone updated availability
-    is_active BOOLEAN DEFAULT TRUE,
-    
-    -- Constraints
-    CONSTRAINT capacity_positive CHECK (total_capacity > 0),
-    CONSTRAINT available_valid CHECK (current_available IS NULL OR (current_available >= 0 AND current_available <= total_capacity))
-);
+#### 5. Friend System
+**What**:
+- Search for friends by username or email
+- Send friend request
+- Accept/decline friend requests
+- View friends list
+- See friends' current study locations (if they're checked in)
+- Friends appear on map as special markers (different icon)
 
--- Geospatial index (critical for performance)
-CREATE INDEX idx_spots_location ON study_spots USING GIST(location);
+**Why**: Enables social coordination (core differentiator)
 
--- Other indexes
-CREATE INDEX idx_spots_active ON study_spots(is_active) WHERE is_active = TRUE;
-CREATE INDEX idx_spots_updated ON study_spots(last_update_at DESC);
+**Complexity**: 🟡 Medium (standard social graph implementation)
+
+**Constraints**:
+- Users must be mutual friends to see each other's locations
+- Max 200 friends per user (for MVP)
+- No groups or study circles (save for post-MVP)
+
+---
+
+#### 6. Spot Saving Requests
+**What**:
+- "Request Spot Save" button on spot details page
+- Select friend(s) nearby (within 2km of that spot)
+- Add optional message ("Can you save a seat? Arriving in 15 min")
+- Friend receives push notification
+- Friend can Accept, Decline, or Ignore
+- Requester sees status (Pending, Accepted, Declined)
+- Request expires after 30 minutes
+
+**Why**: THE unique feature that differentiates us from Google Maps
+
+**Complexity**: 🟡 Medium (notification system, state management)
+
+**User Flow**:
 ```
-
-### Table: `spot_updates`
-
-```sql
-CREATE TABLE spot_updates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    spot_id UUID NOT NULL REFERENCES study_spots(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Update data
-    seats_available INTEGER NOT NULL,
-    noise_level VARCHAR(20), -- 'quiet', 'moderate', 'loud'
-    photo_url VARCHAR(500), -- S3 URL if user uploaded photo
-    
-    -- Location verification
-    user_latitude DECIMAL(10, 7) NOT NULL,
-    user_longitude DECIMAL(10, 7) NOT NULL,
-    distance_from_spot DECIMAL(10, 2), -- meters, calculated on server
-    
-    -- Quality metrics
-    confidence_score DECIMAL(5, 2), -- 0-100, calculated based on recency and reputation
-    is_accurate BOOLEAN, -- determined later by comparing with subsequent updates
-    accuracy_verified_at TIMESTAMP,
-    
-    -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Constraints
-    CONSTRAINT seats_non_negative CHECK (seats_available >= 0),
-    CONSTRAINT valid_noise_level CHECK (noise_level IN ('quiet', 'moderate', 'loud') OR noise_level IS NULL)
-);
-
--- Indexes for common queries
-CREATE INDEX idx_updates_spot_id ON spot_updates(spot_id, created_at DESC);
-CREATE INDEX idx_updates_user_id ON spot_updates(user_id, created_at DESC);
-CREATE INDEX idx_updates_created_at ON spot_updates(created_at DESC);
-```
-
-### Table: `spot_reservations` (Phase 2 - Spot-Saving Feature)
-
-```sql
-CREATE TABLE spot_reservations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    spot_id UUID NOT NULL REFERENCES study_spots(id) ON DELETE CASCADE,
-    
-    -- Parties involved
-    requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- person who needs a seat
-    saver_id UUID REFERENCES users(id) ON DELETE SET NULL, -- person who accepted the request
-    
-    -- Request details
-    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL, -- 15 minutes from request
-    estimated_arrival_minutes INTEGER NOT NULL, -- "I'll be there in 10 min"
-    
-    -- Status
-    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, accepted, rejected, expired, fulfilled
-    responded_at TIMESTAMP,
-    fulfilled_at TIMESTAMP,
-    
-    -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Constraints
-    CONSTRAINT valid_status CHECK (status IN ('pending', 'accepted', 'rejected', 'expired', 'fulfilled')),
-    CONSTRAINT arrival_time_valid CHECK (estimated_arrival_minutes > 0 AND estimated_arrival_minutes <= 20)
-);
-
--- Indexes
-CREATE INDEX idx_reservations_spot_status ON spot_reservations(spot_id, status, created_at DESC);
-CREATE INDEX idx_reservations_requester ON spot_reservations(requester_id, created_at DESC);
-CREATE INDEX idx_reservations_saver ON spot_reservations(saver_id, created_at DESC);
-CREATE INDEX idx_reservations_expires ON spot_reservations(expires_at) WHERE status = 'pending';
-```
-
-### Table: `achievements` (Gamification - Optional for MVP)
-
-```sql
-CREATE TABLE achievements (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    icon_url VARCHAR(500),
-    points_required INTEGER,
-    badge_tier VARCHAR(20), -- bronze, silver, gold, platinum
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE user_achievements (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
-    unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    UNIQUE(user_id, achievement_id)
-);
-
-CREATE INDEX idx_user_achievements ON user_achievements(user_id, unlocked_at DESC);
+User A: "I want to study at Odegaard"
+User A: Sees Friend B is nearby
+User A: Taps "Request Spot Save" → Select Friend B → "Can you grab a seat?"
+Friend B: Gets push notification
+Friend B: Taps notification → Opens request → "Accept"
+User A: Gets notification "Friend B accepted! Spot saved at Odegaard 4th Floor"
 ```
 
 ---
 
-## Core API Endpoints
+#### 7. Push Notifications
+**What** (MVP scope only):
+- Friend request received
+- Friend request accepted
+- Spot save request received
+- Spot save request accepted/declined
+- Friend checked in nearby (if user has app open)
 
-### Base URL
-- **Development:** `http://localhost:8080/api`
-- **Staging:** `https://staging.havn.app/api`
-- **Production:** `https://api.havn.app/api`
+**Why**: Drive engagement, enable async coordination
 
-### Response Format
+**Complexity**: 🟢 Low (Expo Push Notifications handles this)
 
-**Success Response:**
-```json
-{
-  "success": true,
-  "data": { /* response payload */ },
-  "message": "Optional success message"
-}
-```
-
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": "Error message describing what went wrong",
-  "code": "ERROR_CODE"
-}
-```
+**Tech**: Expo Push Notification service (free tier: unlimited notifications)
 
 ---
 
-### Authentication Endpoints
+#### 8. Basic Profile & Settings
+**What**:
+- View own profile (name, avatar, university, grad year, major)
+- Edit profile (name, avatar only for MVP)
+- Settings:
+  - Notification preferences (on/off for each type)
+  - Location sharing (Friends / No One)
+  - Auto check-out time (2 hours / 4 hours / 6 hours)
+  - Privacy policy, Terms of Service links
+  - Log out
+  - Delete account
 
-#### **POST /api/auth/register**
+**Why**: User control and legal compliance
 
-Create a new user account.
-
-**Request Body:**
-```json
-{
-  "email": "student@university.edu",
-  "password": "SecureP@ss123",
-  "full_name": "Jane Doe"
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "student@university.edu",
-      "full_name": "Jane Doe",
-      "total_points": 0,
-      "current_streak": 0,
-      "reputation_score": 50.0,
-      "created_at": "2025-10-13T10:30:00Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  },
-  "message": "Account created successfully"
-}
-```
-
-**Errors:**
-- `400` - Validation error (email format, weak password)
-- `409` - Email already exists
-
-**Example cURL:**
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "student@university.edu",
-    "password": "SecureP@ss123",
-    "full_name": "Jane Doe"
-  }'
-```
+**Complexity**: 🟢 Low
 
 ---
 
-#### **POST /api/auth/login**
+### ❌ Features to SKIP for MVP (Post-MVP)
 
-Authenticate user and receive JWT token.
+Do NOT build these initially:
 
-**Request Body:**
-```json
-{
-  "email": "student@university.edu",
-  "password": "SecureP@ss123"
-}
-```
+- ❌ Spot reviews & ratings (Phase 2)
+- ❌ Spot photos (crowdsourced) (Phase 2)
+- ❌ Study groups (Phase 2)
+- ❌ Analytics dashboard (Phase 3)
+- ❌ Occupancy predictions (Phase 3)
+- ❌ Historical occupancy data view (Phase 3)
+- ❌ Calendar integration (Phase 3)
+- ❌ Chat/messaging system (Phase 2)
+- ❌ Study streaks / gamification (Phase 2)
+- ❌ Discovery feed (Phase 2)
+- ❌ Admin panel (build ad-hoc SQL scripts for now)
+- ❌ Spot creation by users (seed spots manually)
+- ❌ Off-campus spots (UW campus only)
+- ❌ Multiple universities (UW only)
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "student@university.edu",
-      "full_name": "Jane Doe",
-      "total_points": 125,
-      "current_streak": 3,
-      "reputation_score": 68.5
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-**Errors:**
-- `401` - Invalid credentials
-- `400` - Missing email or password
+**Why Skip?**: These are nice-to-haves that don't validate core hypothesis. Build them after getting user feedback.
 
 ---
 
-#### **POST /api/auth/logout**
+## Development Timeline (Optimized for Cursor AI)
 
-Invalidate JWT token (add to Redis blacklist).
+**Total Duration**: 10-12 weeks  
+**Team**: You + Cursor AI + 1 Contract Designer (UI/UX)  
+**Work Cadence**: 20-30 hours/week
 
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+### Week 1-2: Foundation & Setup
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
+#### Week 1: Project Initialization
+- [x] Create project structure
+- [ ] Set up Supabase project
+  - Create database
+  - Enable PostGIS extension
+  - Set up authentication (email + Google OAuth)
+- [ ] Set up Railway project for Golang backend
+  - Create new Railway app
+  - Link GitHub repo (for CI/CD)
+  - Set environment variables
+- [ ] Initialize React Native (Expo) project
+  - `npx create-expo-app havn --template`
+  - Install core dependencies (see design.md)
+  - Set up Expo EAS for builds
+- [ ] Design system foundations
+  - Color palette (minimalist: 2-3 colors max)
+  - Typography (1-2 fonts)
+  - Spacing system (8px grid)
+  - Component library structure (buttons, cards, inputs)
 
----
-
-### Study Spot Endpoints
-
-#### **GET /api/spots**
-
-Retrieve all study spots (or filter by geospatial bounds).
-
-**Query Parameters:**
-- `lat` (optional): Latitude for center of search
-- `lng` (optional): Longitude for center of search
-- `radius` (optional): Radius in meters (default: 5000, max: 10000)
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "spots": [
-      {
-        "id": "123e4567-e89b-12d3-a456-426614174000",
-        "name": "Main Library - 2nd Floor",
-        "description": "Quiet study area with individual desks",
-        "address": "100 University Ave",
-        "latitude": 37.8719,
-        "longitude": -122.2585,
-        "total_capacity": 50,
-        "current_available": 12,
-        "availability_status": "available", // available, low, full
-        "confidence_score": 85.5,
-        "last_update_at": "2025-10-13T10:25:00Z",
-        "amenities": {
-          "wifi": true,
-          "outlets": true,
-          "printer": true,
-          "quiet_zone": true,
-          "outdoor": false
-        },
-        "distance_meters": 450 // only if lat/lng provided
-      },
-      // ... more spots
-    ],
-    "count": 24
-  }
-}
-```
-
-**Example:**
-```bash
-curl "http://localhost:8080/api/spots?lat=37.8719&lng=-122.2585&radius=1000" \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
+**Deliverable**: Running "Hello World" app on iOS/Android simulator, connected to Supabase, basic Golang API responding
 
 ---
 
-#### **GET /api/spots/nearby**
+#### Week 2: Database Schema & Core Backend
+- [ ] Design database schema (see design.md for full schema)
+  - Users table with Supabase Auth integration
+  - Spots table with PostGIS geometry column
+  - Friendships table
+  - Occupancy_logs table
+  - Spot_save_requests table
+- [ ] Seed initial data
+  - 30-50 UW study spots (manually research and add)
+  - Coordinates, amenities, hours, capacity
+- [ ] Backend API skeleton (Golang)
+  - Project structure (handlers, services, models)
+  - Supabase client initialization
+  - JWT auth middleware
+  - Health check endpoint
+  - CORS configuration
+- [ ] Core API endpoints (stubbed)
+  - `GET /api/v1/spots` (list spots)
+  - `GET /api/v1/spots/:id` (spot details)
+  - `POST /api/v1/occupancy/checkin`
+  - `POST /api/v1/occupancy/checkout`
 
-Optimized endpoint for "spots near me" (mobile-friendly).
-
-**Query Parameters:**
-- `lat` (required): User's latitude
-- `lng` (required): User's longitude
-- `radius` (optional): Radius in meters (default: 500)
-- `limit` (optional): Max results (default: 20)
-
-**Response:** Same format as `GET /api/spots`
-
----
-
-#### **GET /api/spots/:id**
-
-Get detailed information about a specific spot.
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "spot": {
-      "id": "123e4567-e89b-12d3-a456-426614174000",
-      "name": "Main Library - 2nd Floor",
-      "description": "Quiet study area with individual desks",
-      "address": "100 University Ave",
-      "latitude": 37.8719,
-      "longitude": -122.2585,
-      "total_capacity": 50,
-      "current_available": 12,
-      "availability_status": "available",
-      "confidence_score": 85.5,
-      "last_update_at": "2025-10-13T10:25:00Z",
-      "amenities": {
-        "wifi": true,
-        "outlets": true,
-        "printer": true,
-        "quiet_zone": true,
-        "outdoor": false
-      },
-      "recent_updates": [
-        {
-          "seats_available": 12,
-          "noise_level": "quiet",
-          "updated_at": "2025-10-13T10:25:00Z",
-          "updated_by": "Anonymous" // don't expose user identity
-        },
-        {
-          "seats_available": 15,
-          "noise_level": "quiet",
-          "updated_at": "2025-10-13T10:05:00Z",
-          "updated_by": "Anonymous"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Errors:**
-- `404` - Spot not found
+**Deliverable**: Database schema deployed, 50 spots seeded, basic API returning data
 
 ---
 
-#### **POST /api/spots/:id/update**
+### Week 3-4: Map & Spot Discovery
 
-Submit an availability update for a spot.
+#### Week 3: Map Integration
+- [ ] Mapbox integration (React Native Maps)
+  - Display UW campus map (center: 47.6553° N, 122.3035° W)
+  - User's current location (blue dot)
+  - Request location permissions (foreground only)
+- [ ] Spot markers
+  - Custom marker components (colored by occupancy)
+  - Marker clustering (for 50+ spots)
+  - Tap marker → bottom sheet with spot summary
+- [ ] Filters UI
+  - Distance filter (bottom sheet)
+  - Spot type filter (chips)
+  - Apply filters → re-query API
+- [ ] API implementation
+  - `GET /api/v1/spots?lat=X&lon=Y&radius=1000&type=library`
+  - PostGIS query: `ST_DWithin` for proximity
+  - Return spots sorted by distance
+  - Include current_occupancy in response
 
-**Headers:**
-```
-Authorization: Bearer YOUR_TOKEN
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
-{
-  "seats_available": 12,
-  "noise_level": "quiet", // optional: quiet, moderate, loud
-  "photo_url": "https://s3.../photo.jpg", // optional
-  "user_latitude": 37.8720,
-  "user_longitude": -122.2586
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "update": {
-      "id": "update-uuid",
-      "spot_id": "123e4567-e89b-12d3-a456-426614174000",
-      "seats_available": 12,
-      "confidence_score": 95.0,
-      "created_at": "2025-10-13T10:30:00Z"
-    },
-    "points_earned": 5,
-    "user_total_points": 130,
-    "streak_updated": true,
-    "current_streak": 4
-  },
-  "message": "Thanks for helping the community! +5 points"
-}
-```
-
-**Errors:**
-- `400` - Validation error (seats_available > capacity)
-- `403` - Too far from location (must be within 100m)
-- `429` - Rate limit exceeded (max 1 update per 5 min per spot)
-
-**Business Logic:**
-1. Validate user is within 100m of spot (geofencing)
-2. Calculate distance from spot
-3. Insert update into `spot_updates` table
-4. Calculate confidence score (based on recency, user reputation)
-5. Update `study_spots.current_available` and `last_update_at`
-6. Invalidate Redis cache for this spot
-7. Award points to user (5 base + 2 accuracy bonus if applicable)
-8. Update user streak if new day
-9. Broadcast update via WebSocket to connected clients
+**Deliverable**: Interactive map with 50 spots, filtering works, occupancy colors displayed
 
 ---
 
-### User Endpoints
+#### Week 4: Spot Details & List View
+- [ ] Spot details screen
+  - Full spot information
+  - Occupancy chart (simple bar: 15/50 students)
+  - Amenity icons
+  - "Navigate" button (deep link to Apple/Google Maps)
+  - "Check In Here" button
+- [ ] List view (alternative to map)
+  - Sorted by distance
+  - Card-based UI
+  - Same filters as map view
+  - Tap card → spot details
+- [ ] Polish animations
+  - Map marker animations (smooth color transitions)
+  - Bottom sheet slide-up
+  - Loading skeletons
 
-#### **GET /api/users/me**
-
-Get current user's profile and stats.
-
-**Headers:**
-```
-Authorization: Bearer YOUR_TOKEN
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "student@university.edu",
-      "full_name": "Jane Doe",
-      "total_points": 130,
-      "current_streak": 4,
-      "reputation_score": 72.5,
-      "email_verified": false,
-      "created_at": "2025-10-01T08:00:00Z"
-    },
-    "stats": {
-      "total_check_ins": 26,
-      "check_ins_this_week": 8,
-      "rank": "Top 15%",
-      "achievements_unlocked": 3
-    }
-  }
-}
-```
+**Deliverable**: Full spot discovery flow works end-to-end
 
 ---
 
-#### **GET /api/users/leaderboard**
+### Week 5-6: Occupancy Tracking & Real-Time
 
-Get top users by points (weekly or all-time).
+#### Week 5: Check-In/Check-Out
+- [ ] Location services
+  - Background location permissions (iOS: "While Using App")
+  - Geofence setup (100m radius around each spot)
+  - Location updates every 5 minutes (when app active)
+- [ ] Check-in flow
+  - Auto-detect when user enters spot geofence
+  - Show notification: "Check in to Odegaard 4th Floor?"
+  - Tap notification → confirm check-in
+  - Manual check-in button on spot details
+  - API: `POST /api/v1/occupancy/checkin`
+- [ ] Check-out flow
+  - Auto check-out after 4 hours (default)
+  - Auto check-out when leaving geofence (after 15 min)
+  - Manual check-out button in app
+  - API: `POST /api/v1/occupancy/checkout`
+- [ ] Backend logic
+  - Insert into occupancy_logs table
+  - Update spots.current_occupancy (increment/decrement)
+  - Validate: User can only be checked in to 1 spot at a time
+  - Handle edge cases (app killed, no internet, etc.)
 
-**Query Parameters:**
-- `period` (optional): `weekly` or `all_time` (default: `weekly`)
-- `limit` (optional): Number of users (default: 10, max: 100)
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "leaderboard": [
-      {
-        "rank": 1,
-        "user_id": "user-uuid",
-        "full_name": "John S.", // partial name for privacy
-        "points": 450,
-        "check_ins": 90
-      },
-      // ... more users
-    ],
-    "your_rank": 23,
-    "period": "weekly"
-  }
-}
-```
+**Deliverable**: Users can check in/out, occupancy count updates in database
 
 ---
 
-## WebSocket Implementation
+#### Week 6: Real-Time Updates
+- [ ] Supabase Realtime setup
+  - Enable Realtime for `spots` table
+  - Create publication for `current_occupancy` column changes
+  - Set up RLS policies (users can read all spots)
+- [ ] Frontend subscriptions
+  - Subscribe to spots table changes
+  - On update → re-render map markers (color change)
+  - Debounce updates (max 1 update per 30 seconds per spot)
+- [ ] Backend optimization
+  - Batch occupancy updates (don't spam database)
+  - Use PostgreSQL trigger to auto-update current_occupancy
+  - Add index on spots(current_occupancy)
+- [ ] Testing
+  - Simulate multiple users checking in
+  - Verify map updates in real-time
+  - Test with poor network conditions
 
-### Connection
-
-**URL:** `ws://localhost:8080/ws` or `wss://api.havn.app/ws`
-
-**Authentication:**
-- Send JWT token in first message after connection
-- Server validates token and associates connection with user
-- If invalid, server closes connection with error code
-
-**Connection Flow:**
-```javascript
-const ws = new WebSocket('ws://localhost:8080/ws');
-
-ws.onopen = () => {
-  // Authenticate
-  ws.send(JSON.stringify({
-    type: 'auth',
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-  }));
-};
-
-ws.onmessage = (event) => {
-  const message = JSON.parse(event.data);
-  handleMessage(message);
-};
-```
-
-### Message Types
-
-#### Client → Server: Authentication
-
-```json
-{
-  "type": "auth",
-  "token": "JWT_TOKEN"
-}
-```
-
-**Server Response:**
-```json
-{
-  "type": "auth_success",
-  "user_id": "user-uuid"
-}
-```
-or
-```json
-{
-  "type": "auth_error",
-  "error": "Invalid token"
-}
-```
+**Deliverable**: Real-time occupancy updates working smoothly, battery impact minimal
 
 ---
 
-#### Client → Server: Subscribe to Region
+### Week 7-8: Social Features
 
-Subscribe to updates for spots in a specific geographic region.
+#### Week 7: Friend System
+- [ ] Friend search
+  - Search bar (by username or email)
+  - Debounced API call: `GET /api/v1/users/search?q=alex`
+  - Show results (avatar, name, university)
+- [ ] Friend requests
+  - "Add Friend" button on user profile
+  - API: `POST /api/v1/friends/request`
+  - Request appears in recipient's "Requests" tab
+  - Accept/Decline buttons
+  - API: `POST /api/v1/friends/accept` or `/decline`
+- [ ] Friends list
+  - Show all accepted friends
+  - Avatar, name, status (Currently Studying at X / Not Studying)
+  - Tap friend → view their profile + current location (if checked in)
+- [ ] Friend locations on map
+  - Special marker for friends (different icon, e.g., star)
+  - Only show friends currently checked in
+  - Tap friend marker → "Message Friend" or "Request Spot Save"
 
-```json
-{
-  "type": "subscribe",
-  "bounds": {
-    "north": 37.8750,
-    "south": 37.8690,
-    "east": -122.2550,
-    "west": -122.2620
-  }
-}
-```
-
-**Server Response:**
-```json
-{
-  "type": "subscribed",
-  "region": "geohash_abc123"
-}
-```
-
----
-
-#### Server → Client: Spot Update
-
-When someone updates a spot's availability, broadcast to all subscribed clients.
-
-```json
-{
-  "type": "spot_update",
-  "data": {
-    "spot_id": "123e4567-e89b-12d3-a456-426614174000",
-    "current_available": 12,
-    "availability_status": "available",
-    "confidence_score": 95.0,
-    "last_update_at": "2025-10-13T10:30:00Z"
-  }
-}
-```
+**Deliverable**: Full friend system working, friends visible on map
 
 ---
 
-#### Client → Server: Ping (Heartbeat)
+#### Week 8: Spot Saving Requests
+- [ ] Request flow
+  - "Request Spot Save" button on spot details
+  - Select friend(s) from list (filtered: within 2km of spot)
+  - Add optional message (text input)
+  - API: `POST /api/v1/spot-saves/request`
+- [ ] Receiving requests
+  - Push notification: "Alex asked you to save a spot at Odegaard!"
+  - Tap notification → opens request details
+  - Accept / Decline buttons
+  - API: `POST /api/v1/spot-saves/respond`
+- [ ] Request status
+  - Requester sees pending/accepted/declined status
+  - Request expires after 30 minutes (background job)
+  - Expired requests removed from UI
+- [ ] Notifications setup (Expo Push)
+  - Request Expo push token on app launch
+  - Store token in users table
+  - Backend sends notification via Expo API on request/response
+- [ ] Backend implementation
+  - spot_save_requests table CRUD
+  - Expiry logic (PostgreSQL scheduled job or Supabase function)
+  - Push notification service (Golang http client → Expo API)
 
-Keep connection alive.
-
-```json
-{
-  "type": "ping"
-}
-```
-
-**Server Response:**
-```json
-{
-  "type": "pong"
-}
-```
-
----
-
-### Redis Pub/Sub Architecture
-
-**Why:** Horizontal scaling - multiple backend instances can broadcast to all connected clients.
-
-**Implementation:**
-1. Client connects to WebSocket on Server A
-2. Client subscribes to region `geohash_abc123`
-3. Server A subscribes to Redis channel `spot_updates:geohash_abc123`
-4. User submits update via REST API, handled by Server B
-5. Server B publishes message to Redis: `PUBLISH spot_updates:geohash_abc123 {update_data}`
-6. Server A receives message from Redis, broadcasts to all WebSocket clients in that region
-
-**Redis Channels:**
-- `spot_updates:geohash_abc123` - Updates for specific region
-- `global_events` - System-wide announcements (maintenance, etc.)
+**Deliverable**: Spot saving fully functional, push notifications work
 
 ---
 
-## React Native Project Structure
+### Week 9-10: Polish, Testing & Launch Prep
 
-```
-mobile/
-├── src/
-│   ├── screens/
-│   │   ├── auth/
-│   │   │   ├── LoginScreen.tsx
-│   │   │   ├── RegisterScreen.tsx
-│   │   │   └── ForgotPasswordScreen.tsx
-│   │   ├── MapScreen.tsx              # Main map view
-│   │   ├── SpotDetailScreen.tsx       # Full spot details
-│   │   ├── ListScreen.tsx             # List view alternative
-│   │   ├── ProfileScreen.tsx          # User profile and stats
-│   │   └── LeaderboardScreen.tsx      # Top contributors
-│   │
-│   ├── components/
-│   │   ├── SpotMarker.tsx             # Custom map marker
-│   │   ├── SpotCard.tsx               # Card for list view
-│   │   ├── CheckInModal.tsx           # Bottom sheet for updates
-│   │   ├── LoadingSpinner.tsx         # Loading indicator
-│   │   ├── EmptyState.tsx             # No data placeholder
-│   │   ├── ErrorBoundary.tsx          # Error handling
-│   │   └── PointsBadge.tsx            # Points display
-│   │
-│   ├── services/
-│   │   ├── api.ts                     # Axios instance with interceptors
-│   │   ├── auth.ts                    # Auth API calls
-│   │   ├── spots.ts                   # Spot API calls
-│   │   ├── users.ts                   # User API calls
-│   │   └── websocket.ts               # WebSocket client singleton
-│   │
-│   ├── hooks/
-│   │   ├── useAuth.ts                 # Auth state and actions
-│   │   ├── useSpots.ts                # Fetch and cache spots (React Query)
-│   │   ├── useLocation.ts             # User location tracking
-│   │   └── useWebSocket.ts            # WebSocket connection
-│   │
-│   ├── store/
-│   │   ├── authStore.ts               # Zustand: auth state
-│   │   ├── uiStore.ts                 # Zustand: UI state (modals, etc.)
-│   │   └── spotStore.ts               # Zustand: local spot state (optional)
-│   │
-│   ├── types/
-│   │   ├── api.ts                     # API response types
-│   │   ├── spot.ts                    # Spot entity types
-│   │   ├── user.ts                    # User entity types
-│   │   └── navigation.ts              # Navigation types
-│   │
-│   ├── utils/
-│   │   ├── formatters.ts              # Date, number formatting
-│   │   ├── validators.ts              # Input validation
-│   │   ├── geolocation.ts             # Distance calculations
-│   │   └── constants.ts               # App constants
-│   │
-│   ├── constants/
-│   │   ├── colors.ts                  # Color palette
-│   │   ├── config.ts                  # API URLs, keys
-│   │   └── styles.ts                  # Shared styles
-│   │
-│   └── navigation/
-│       ├── AppNavigator.tsx           # Root navigator
-│       ├── AuthNavigator.tsx          # Auth stack
-│       └── MainNavigator.tsx          # Main bottom tabs
-│
-├── App.tsx                            # App entry point
-├── app.json                           # React Native config
-├── package.json
-├── tsconfig.json
-└── .env.example                       # Environment variables
-```
+#### Week 9: UI/UX Polish
+- [ ] Design refinement
+  - Work with contract designer on final UI pass
+  - Consistent spacing, typography, colors
+  - Empty states (no spots nearby, no friends yet)
+  - Error states (network error, location denied)
+  - Loading states (skeletons, spinners)
+- [ ] Animations
+  - Smooth transitions between screens
+  - Micro-interactions (button presses, swipes)
+  - Map animations (zoom, pan)
+- [ ] Accessibility
+  - Screen reader support (iOS VoiceOver, Android TalkBack)
+  - Sufficient color contrast (WCAG AA)
+  - Touch targets min 44x44px
+- [ ] Onboarding flow
+  - 3-screen tutorial (swipe through)
+  - Screen 1: "Find study spots in real-time"
+  - Screen 2: "See where your friends are studying"
+  - Screen 3: "Request spot saves from nearby friends"
+  - Skip button for returning users
 
-### Key Patterns
-
-**1. API Service Layer:**
-```typescript
-// src/services/api.ts
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-  timeout: 10000,
-});
-
-// Request interceptor: Add JWT to headers
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('jwt_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor: Handle errors
-api.interceptors.response.use(
-  (response) => response.data, // Return data directly
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired, logout
-      AsyncStorage.removeItem('jwt_token');
-      // Navigate to login
-    }
-    return Promise.reject(error.response?.data || error);
-  }
-);
-
-export default api;
-```
-
-**2. React Query for Data Fetching:**
-```typescript
-// src/hooks/useSpots.ts
-import { useQuery } from '@tanstack/react-query';
-import { getSpots } from '../services/spots';
-
-export const useSpots = (lat?: number, lng?: number, radius?: number) => {
-  return useQuery({
-    queryKey: ['spots', lat, lng, radius],
-    queryFn: () => getSpots({ lat, lng, radius }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-};
-```
-
-**3. Zustand for Auth State:**
-```typescript
-// src/store/authStore.ts
-import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (user: User, token: string) => Promise<void>;
-  logout: () => Promise<void>;
-  loadToken: () => Promise<void>;
-}
-
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  
-  login: async (user, token) => {
-    await AsyncStorage.setItem('jwt_token', token);
-    set({ user, token, isAuthenticated: true });
-  },
-  
-  logout: async () => {
-    await AsyncStorage.removeItem('jwt_token');
-    set({ user: null, token: null, isAuthenticated: false });
-  },
-  
-  loadToken: async () => {
-    const token = await AsyncStorage.getItem('jwt_token');
-    if (token) {
-      // Optionally validate token or fetch user
-      set({ token, isAuthenticated: true });
-    }
-  },
-}));
-```
+**Deliverable**: App looks professional and polished, onboarding complete
 
 ---
 
-## Gamification System
+#### Week 10: Testing & Bug Fixes
+- [ ] Testing strategy
+  - Manual testing on iOS (iPhone 12+, iOS 17+)
+  - Manual testing on Android (Pixel, Samsung, Android 13+)
+  - Edge cases:
+    - No internet connection
+    - Location services disabled
+    - Killed app (test background behavior)
+    - Multiple check-ins
+    - Expired spot save requests
+- [ ] Performance optimization
+  - Reduce app bundle size (remove unused deps)
+  - Optimize images (compress spot photos)
+  - Lazy load screens (React Navigation)
+  - Profile app performance (React Native Debugger)
+- [ ] Beta testing
+  - Recruit 20 UW students for beta (friends, Reddit, flyers)
+  - Use TestFlight (iOS) and Google Play Internal Testing (Android)
+  - Collect feedback via Google Form
+  - Fix critical bugs
+- [ ] Analytics setup
+  - Expo Analytics (free, basic)
+  - Track key events:
+    - User sign up
+    - Spot viewed
+    - Check-in
+    - Friend request sent
+    - Spot save request sent
+  - No PII tracking (privacy-first)
 
-### Point Distribution
-
-**Actions that Earn Points:**
-- Check-in (update availability): **5 points**
-- Accuracy bonus (if update matches consensus): **+2 points**
-- Daily streak maintained: **+10 points** (awarded at midnight)
-- Spot-save fulfilled (Phase 2): **+15 points**
-- Photo upload: **+3 points**
-
-**Point Penalties:**
-- Inaccurate update (flagged by multiple users): **-10 points**
-- Repeated violations: **-50 points** + temp suspension
-
-### Reputation Score (0-100)
-
-**Formula:**
-```
-reputation = base(50) + accuracy_bonus + consistency_bonus - penalty
-```
-
-- **Accuracy Bonus:** +30 points max (based on % of accurate updates)
-- **Consistency Bonus:** +20 points max (based on streak and frequency)
-- **Penalty:** -10 to -50 (based on violations)
-
-**Reputation Tiers:**
-- 0-30: New User (limited features)
-- 31-50: Regular User
-- 51-70: Trusted Contributor (can save spots)
-- 71-85: Super Helper (priority support)
-- 86-100: Campus Legend (exclusive perks)
-
-### Achievements (Badges)
-
-**Early MVP Achievements:**
-1. **First Check-In** - Submit your first update (unlock: immediate)
-2. **Week Warrior** - 7-day streak (unlock: 7 consecutive days)
-3. **Century Club** - 100 total points (unlock: reach 100 points)
-4. **Explorer** - Check in at 10 different spots (unlock: 10 unique spots)
-
-**Post-MVP Achievements:**
-5. **Night Owl** - Check in between 10pm-6am 5 times
-6. **Social Butterfly** - Successfully save spots for 10 friends
-7. **Accurate Amy** - 95%+ accuracy rate over 50 updates
-8. **Campus Legend** - Reach reputation score 90+
-
-### Leaderboard
-
-**Weekly Leaderboard:**
-- Resets every Monday at midnight
-- Top 10 users by points earned that week
-- Display: Rank, partial name ("John S."), points, check-ins
-
-**All-Time Leaderboard:**
-- Top 100 users by total points
-- Display: Rank, partial name, total points, reputation score
+**Deliverable**: Stable, tested app ready for public launch
 
 ---
 
-## MVP Launch Checklist
+### Week 11-12: Launch & Iteration
 
-### Must-Haves (Cannot launch without)
+#### Week 11: App Store Submission
+- [ ] App Store assets
+  - iOS: Screenshots (6.5" and 5.5" iPhone), app icon, privacy policy URL
+  - Android: Screenshots, feature graphic, app icon
+  - App descriptions (compelling copy)
+  - Keywords for ASO (App Store Optimization)
+- [ ] Legal pages
+  - Privacy Policy (use template, customize for location data)
+  - Terms of Service
+  - Host on simple static site (Vercel/Netlify)
+- [ ] Submit to App Store
+  - iOS: Submit via App Store Connect (review: 1-3 days)
+  - Android: Submit via Google Play Console (review: 1-2 days)
+- [ ] Pre-launch marketing
+  - Instagram page (@havnapp) + 5-10 posts
+  - TikTok teaser video
+  - Reddit post on r/udub (UW subreddit)
+  - Flyers at UW (Odegaard, HUB, cafes)
 
-- [ ] User registration and login working
-- [ ] Map view displaying all seeded spots
-- [ ] Color-coded markers (green/yellow/red)
-- [ ] Spot detail screen with current availability
-- [ ] Check-in flow with geofencing
-- [ ] Points awarded for check-ins
-- [ ] Profile showing total points and streak
-- [ ] API responds in <200ms median
-- [ ] App doesn't crash (tested on iOS + Android)
-- [ ] Backend deployed to staging/production
-- [ ] Database backups configured
-- [ ] Error tracking (Sentry) enabled
-- [ ] Basic analytics (Mixpanel) tracking events
-- [ ] 20+ spots seeded in database
-- [ ] Privacy policy and terms of service pages
-
-### Nice-to-Haves (Can ship without, add in v1.1)
-
-- [ ] WebSocket real-time updates
-- [ ] List view alternative to map
-- [ ] Noise level indicator
-- [ ] Photo upload for spots
-- [ ] Email verification
-- [ ] Password reset flow
-- [ ] Push notifications
-- [ ] Dark mode
-- [ ] Leaderboard screen
-- [ ] Achievement badges
-- [ ] Favorite spots
-- [ ] Report incorrect data
-
-### Testing Checklist
-
-- [ ] Happy path: Register → Login → View Map → Check-In → See Points
-- [ ] Edge case: No internet (show cached data)
-- [ ] Edge case: Location disabled (prompt user to enable)
-- [ ] Edge case: Too far from spot (show geofence error)
-- [ ] Edge case: Rapid check-ins (rate limiting works)
-- [ ] Security: Invalid JWT rejected
-- [ ] Security: SQL injection attempts fail
-- [ ] Load test: 100 concurrent WebSocket connections
-- [ ] Load test: 1000 API requests/minute
+**Deliverable**: App live on App Store and Google Play
 
 ---
 
-## Success Criteria
+#### Week 12: Launch & Monitor
+- [ ] Launch day
+  - Post on Instagram, TikTok, Reddit
+  - Email waitlist (if you built one)
+  - Monitor crash reports (Sentry or Expo Crashlytics)
+  - Monitor server errors (Railway logs)
+  - Respond to user feedback (reviews, DMs)
+- [ ] Metrics monitoring
+  - Daily signups
+  - DAU/MAU
+  - Check-ins per day
+  - Spot save requests per day
+  - Crash rate
+- [ ] Rapid iteration
+  - Fix critical bugs within 24 hours (OTA update via Expo)
+  - Collect feature requests (Trello board or Notion)
+  - Prioritize based on user feedback
+- [ ] User interviews
+  - Talk to 10-15 active users (Zoom, 20 min each)
+  - Understand: What do they love? What's confusing? What's missing?
+  - Use insights for post-MVP roadmap
 
-### Technical Metrics
-
-**Performance:**
-- API response time: p50 <100ms, p95 <200ms, p99 <500ms
-- Map render time: <1 second for 50 markers
-- WebSocket latency: <100ms for updates
-- App launch time: <3 seconds cold start
-- Crash rate: <1% of sessions
-
-**Reliability:**
-- Uptime: 99.5%+ (max 3.6 hours downtime/month)
-- Data accuracy: 80%+ (verified via spot-checks)
-- WebSocket connection success rate: 95%+
-
-### User Metrics
-
-**Acquisition:**
-- Week 1: 100 signups
-- Week 2: 250 cumulative signups
-- Week 3: 400 cumulative signups
-- Week 4: 500+ cumulative signups
-
-**Activation:**
-- 70%+ of signups complete at least 1 check-in
-- 50%+ of signups check in within first 24 hours
-
-**Engagement:**
-- DAU: 100+ by week 4
-- Avg check-ins per DAU: 2+
-- Session length: 2-5 minutes median
-
-**Retention:**
-- D1 retention: 60%+
-- D7 retention: 30%+
-- D30 retention: 20%+
-
-**Referral:**
-- Viral coefficient: 0.3+ (each user invites 0.3 friends on average)
+**Deliverable**: Launched app, initial users onboarded, feedback collected
 
 ---
 
-## What Can Wait Until v2
+## Technical Priorities for Cursor AI Development
 
-**Features explicitly NOT in MVP:**
+### What Cursor AI Excels At (Focus Here)
+✅ **Boilerplate code**: Database schemas, API endpoints, CRUD operations  
+✅ **Integration code**: Connecting React Native → Golang API → Supabase  
+✅ **UI components**: Building React Native screens with modern libraries  
+✅ **Bug fixes**: Debugging common errors (async issues, API errors)  
+✅ **Refactoring**: Cleaning up code, adding types, improving structure  
 
-1. **Spot-Saving Marketplace:** Complex social feature requiring critical mass of users
-2. **Study Matching:** Needs privacy considerations and matching algorithm
-3. **ML Predictions:** Requires 4-8 weeks of historical data first
-4. **Multi-University Support:** Launch at single campus, prove model works
-5. **In-App Chat:** Not a messaging app; coordination via spot-saving is sufficient
-6. **Analytics Dashboard:** Build internal admin tools after user-facing features
-7. **Premium Subscriptions:** Monetization comes after proving free tier works
-8. **Admin Panel:** Manual database operations acceptable for first 500 users
-9. **Advanced Filtering:** Simple "show available only" filter sufficient for MVP
-10. **Campus Partnerships:** Focus on organic user growth before B2B
+### What Needs Human Attention (You)
+⚠️ **UX decisions**: How should the friend request flow feel?  
+⚠️ **Design**: Visual polish (work with designer, then Cursor implements)  
+⚠️ **Architecture decisions**: Monolith vs microservices, caching strategy  
+⚠️ **Business logic edge cases**: What if user checks in twice?  
+⚠️ **Testing strategy**: What to test, how to test  
 
-**Rationale:** Ship the minimum product that proves the core hypothesis—students will use an app to find study spots faster than wandering campus. Everything else can be validated post-launch.
+### Cursor-Optimized Development Workflow
 
----
+1. **Define Feature Clearly** (You → Cursor)
+   - Write detailed prompt: "Build friend request system with..."
+   - Include acceptance criteria: "User should see notification when..."
+   - Reference design.md for tech stack specifics
 
-## Development Workflow
+2. **Generate Code** (Cursor)
+   - Cursor generates backend API, frontend UI, database migrations
+   - Uses Supabase MCP for database operations (via tool)
+   - Uses Railway CLI for deployment
 
-### Daily Standup (Async)
+3. **Review & Test** (You)
+   - Read generated code (don't blindly accept)
+   - Test manually on device/simulator
+   - Identify bugs or improvements
 
-Each developer posts in Slack/Discord:
-1. What I shipped yesterday
-2. What I'm working on today
-3. Any blockers
+4. **Iterate** (You → Cursor)
+   - "Fix: Notification not appearing on Android"
+   - "Refactor: Extract MapMarker into separate component"
+   - "Optimize: Reduce API calls on map pan"
 
-### Weekly Review (Friday EOD)
-
-- Demo completed features
-- Review metrics (signups, DAU, check-ins, crash rate)
-- Prioritize next week's tasks
-- Retrospective: What went well, what to improve
-
-### Definition of Done
-
-A feature is "done" when:
-- [ ] Code written and tested locally
-- [ ] No linter errors
-- [ ] TypeScript types defined (no `any`)
-- [ ] Error handling implemented
-- [ ] Loading states implemented
-- [ ] API endpoint documented (Postman collection updated)
-- [ ] Merged to `develop` branch
-- [ ] Deployed to staging
-- [ ] Manually tested on staging
-- [ ] QA approved (if applicable)
-
-### Git Workflow
-
-**Branches:**
-- `main` - Production
-- `develop` - Staging
-- `feature/feature-name` - Feature branches
-
-**Commit Message Format:**
-```
-type: Short description
-
-Longer description if needed.
-
-- Bullet points for details
-```
-
-**Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-
-**Example:**
-```
-feat: Add check-in modal with geofencing
-
-- Implemented bottom sheet modal for updating availability
-- Added geofence validation (must be within 100m)
-- Integrated number picker for seats available
-- Display success message with points earned
-```
+5. **Deploy** (Automated via Railway CI/CD)
+   - Push to GitHub → Railway auto-deploys
+   - Expo OTA update for frontend (instant push)
 
 ---
 
-**Last Updated:** October 13, 2025  
-**Version:** 1.0 (Pre-Development)  
-**Status:** Documentation Phase
+## MVP Success Checklist
+
+Before launching, ensure:
+
+### Functionality
+- [ ] Users can sign up and log in
+- [ ] Map displays 50+ study spots with correct locations
+- [ ] Occupancy data is accurate (verified by manual testing)
+- [ ] Check-in/check-out works reliably
+- [ ] Real-time updates work (test with 2+ devices)
+- [ ] Users can add friends and see friend requests
+- [ ] Friend locations appear on map
+- [ ] Spot save requests work end-to-end
+- [ ] Push notifications arrive within 5 seconds
+
+### Performance
+- [ ] App launches in < 3 seconds (cold start)
+- [ ] Map loads in < 2 seconds
+- [ ] No crashes during 30-minute test session
+- [ ] Battery drain < 10% per hour (with active usage)
+- [ ] App bundle size < 50MB
+
+### UX/UI
+- [ ] Onboarding is clear and takes < 2 minutes
+- [ ] All screens are accessible (VoiceOver compatible)
+- [ ] Empty states are helpful ("No friends yet. Add your first friend!")
+- [ ] Error messages are clear ("Location access required to find spots")
+- [ ] Loading states prevent user confusion
+
+### Legal/Compliance
+- [ ] Privacy Policy published and linked in app
+- [ ] Terms of Service published and linked in app
+- [ ] Location permission request includes clear explanation
+- [ ] User can delete their account and data
+
+### Marketing
+- [ ] App Store screenshots look compelling
+- [ ] App description is clear and benefit-focused
+- [ ] Keywords optimized for "study spot", "university", "UW"
+- [ ] Instagram/TikTok content ready for launch
+
+---
+
+## Post-MVP Roadmap (Quick Reference)
+
+### Month 4-6: Social & Engagement
+- Spot reviews and ratings
+- User-uploaded spot photos
+- Study groups (persistent groups of 3-10 people)
+- Check-in history ("You've studied 20 hours this week!")
+
+### Month 7-9: Intelligence
+- Occupancy predictions (ML model)
+- "Best spot for you right now" recommendations
+- Historical occupancy charts
+- Personal analytics dashboard
+
+### Month 10-12: Growth
+- Expand to 2-3 more universities
+- University partnerships (official library data)
+- Premium tier launch ($4.99/month)
+- Student ambassador program
+
+---
+
+## Key Metrics to Track (Dashboard)
+
+Build a simple admin dashboard (Week 11-12) to monitor:
+
+- **User Growth**: Daily signups, total users
+- **Engagement**: DAU, WAU, MAU, retention (D1, D7, D30)
+- **Core Actions**: Check-ins/day, spot saves/day, friend requests/day
+- **Technical Health**: Crash rate, API latency (p95), error rate
+- **Business**: Referrals, app store ratings, NPS (survey)
+
+Use tools:
+- **Expo Analytics** (free, built-in)
+- **PostHog** (free tier: 1M events/month) for product analytics
+- **Sentry** (free tier: 5k errors/month) for crash reporting
+
+---
+
+## When to Pivot or Iterate
+
+### Signals You Should Pivot:
+- ❌ < 100 signups after 1 month of launch (low demand)
+- ❌ < 10% of users check in more than once (low retention)
+- ❌ < 1 spot save request per 100 DAU (feature not used)
+- ❌ Users complain about same thing repeatedly
+
+### Signals You Should Double Down:
+- ✅ Organic growth (users inviting friends without prompting)
+- ✅ High retention (60%+ weekly retention)
+- ✅ Users asking for more features (shows engagement)
+- ✅ Spot saves heavily used (validates unique value prop)
+
+---
+
+## Resources & Learning
+
+### For You (Developer)
+- **React Native**: Official docs (https://reactnative.dev)
+- **Expo**: Expo docs (https://docs.expo.dev)
+- **Golang**: Go by Example (https://gobyexample.com)
+- **PostGIS**: PostGIS in Action (book) or https://postgis.net/workshops/
+- **Supabase**: Supabase docs (https://supabase.com/docs)
+
+### For Users (Launch Resources)
+- **ASO**: The App Store Optimization Guide (Sensor Tower)
+- **Growth**: Cold Start Problem by Andrew Chen (book)
+- **User Research**: The Mom Test by Rob Fitzpatrick (book)
+
+---
+
+## Summary: What to Build First
+
+**Week 1-2**: Setup (Supabase, Railway, Expo project)  
+**Week 3-4**: Map + Spot Discovery  
+**Week 5-6**: Occupancy Tracking + Real-time  
+**Week 7-8**: Friends + Spot Saving  
+**Week 9-10**: Polish + Testing  
+**Week 11-12**: Launch + Iterate  
+
+**Total MVP Features**: 8 core features (see checklist above)  
+**What NOT to Build**: Everything in projectscope.md that's marked Phase 2+
+
+**Remember**: Ship fast, learn fast, iterate fast. The MVP doesn't need to be perfect—it needs to validate the hypothesis that students want this.
+
+---
+
+**Next**: See `design.md` for complete technical architecture, API specs, database schema, and UI component library.
+
 

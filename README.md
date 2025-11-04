@@ -1,143 +1,366 @@
-# Havn
+# havn - Campus Study Spot Finder
 
-**Know exactly where to go, every time.**
+> **A dynamic, real-time study space discovery and social coordination platform for university students**
 
-Havn is a mobile-first platform that solves the campus study spot discovery problem through real-time, crowdsourced availability data.
+## 🎯 Vision
+
+havn solves the perennial problem of finding available study spaces on campus. Unlike static room-booking systems, havn creates a dynamic, real-time ecosystem where any suitable study location can be discovered, tracked, and coordinated with friends.
+
+**Initial Target**: University of Washington (Seattle)  
+**Tech Stack**: Go + React Native (Expo) + Supabase (PostgreSQL + PostGIS)
+
+---
+
+## 📚 Documentation
+
+All comprehensive planning and technical documentation is in the `/docs` folder:
+
+### **Core Documentation**
+
+1. **[Project Scope](docs/projectscope.md)** - Complete vision, market analysis, features, monetization
+   - Executive summary
+   - Market opportunity & competition
+   - User personas
+   - Complete feature set (MVP → Year 5)
+   - Technical architecture overview
+   - Go-to-market strategy
+   - Success metrics & KPIs
+
+2. **[MVP Roadmap](docs/mvp.md)** - 10-12 week development plan
+   - MVP feature set (what to build, what to skip)
+   - Week-by-week timeline optimized for Cursor AI
+   - Development priorities
+   - Success checklist
+   - Post-MVP roadmap
+
+3. **[Technical Design](docs/design.md)** - Complete technical architecture
+   - Full tech stack with specific versions
+   - Database schema (PostgreSQL + PostGIS)
+   - API specification (all endpoints)
+   - Frontend architecture (React Native + Expo)
+   - Real-time architecture (Supabase Realtime)
+   - Data flow diagrams (ASCII)
+   - Performance & scalability strategies
+
+4. **[Setup & Tools](docs/setup-tools.md)** - Required tools, MCPs, CLIs
+   - Available MCPs in Cursor (Supabase, Browser, Templation)
+   - Required CLIs (Expo, Railway, Supabase)
+   - Environment setup guide
+   - Pre-development checklist
+   - Verification tests
+   - Troubleshooting guide
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21+
+
+Ensure you have installed all tools from [setup-tools.md](docs/setup-tools.md):
+
+**Required**:
 - Node.js 18+
-- Docker & Docker Compose
-- PostgreSQL 15+
-- Redis 7+
+- Go 1.21+
+- Expo CLI & EAS CLI
+- Railway CLI
+- Xcode (macOS) or Android Studio
+- Expo Go app on phone
 
-### Setup
+**Accounts**:
+- Supabase account (database & auth)
+- Railway account (backend hosting)
+- Expo account (mobile builds)
+- GitHub account (version control)
 
-**⚠️ IMPORTANT: Read `SECURITY.md` first!**
+### Development Workflow
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/havn.git
-cd havn
+1. **Read the Docs First**
+   ```bash
+   # Start here:
+   docs/mvp.md          # What to build first
+   docs/design.md       # How to build it
+   docs/setup-tools.md  # Tools you need
+   ```
 
-# 2. Set up environment variables (CRITICAL!)
-cp env.example .env
-# Edit .env and generate strong passwords (see SECURITY.md)
+2. **Initialize Projects** (Week 1)
+   ```bash
+   # Backend (Golang)
+   gh repo create havn-backend --private --clone
+   cd havn-backend
+   go mod init github.com/yourusername/havn-backend
+   # See docs/setup-tools.md for full setup
+   
+   # Frontend (React Native + Expo)
+   gh repo create havn-mobile --private --clone
+   cd havn-mobile
+   npx create-expo-app@latest . --template blank-typescript
+   # See docs/setup-tools.md for dependencies
+   ```
 
-# 3. Start infrastructure
-docker-compose up -d
+3. **Set Up Supabase** (Week 1)
+   ```bash
+   # Option A: Use Cursor AI with Supabase MCP
+   # Ask: "Create a new Supabase project with PostGIS for havn"
+   
+   # Option B: Use Supabase dashboard
+   # Go to supabase.com/dashboard → New Project
+   # Enable PostGIS extension
+   ```
 
-# 4. Set up backend
-cd backend
-go mod download
-# Run migrations (see backend/README.md)
+4. **Create Database Schema** (Week 2)
+   ```bash
+   # Use Cursor with Supabase MCP:
+   # "Create the database schema from docs/design.md"
+   
+   # Or use Supabase SQL editor to paste schema
+   # See docs/design.md for complete SQL
+   ```
 
-# 5. Set up mobile app
-cd ../mobile
-npm install
-npm start
+5. **Start Development** (Week 3+)
+   ```bash
+   # Follow week-by-week plan in docs/mvp.md
+   # Use Cursor AI for rapid development
+   # Reference docs/design.md for implementation details
+   ```
+
+---
+
+## 🏗️ Architecture at a Glance
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Mobile App (React Native + Expo)                  │
+│  - Map view with study spots                       │
+│  - Real-time occupancy updates                     │
+│  - Friend system & spot-saving                     │
+└────────────────────┬────────────────────────────────┘
+                     │ HTTPS/WSS
+┌────────────────────▼────────────────────────────────┐
+│  Backend API (Golang on Railway)                   │
+│  - REST endpoints                                   │
+│  - WebSocket for real-time (optional)              │
+│  - Business logic & validation                      │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│  Supabase (All-in-One Backend)                     │
+│  - PostgreSQL 15 + PostGIS 3.3                     │
+│  - Realtime (Postgres CDC)                         │
+│  - Auth (JWT)                                       │
+│  - Storage (photos)                                 │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📁 Project Structure
+## ✨ Core Features (MVP)
 
+### For Students
+✅ **Dynamic Spot Discovery**: Find study spots on an interactive map with real-time availability  
+✅ **Occupancy Tracking**: See how crowded spots are before you go (🟢 🟡 🔴)  
+✅ **Friend Coordination**: See where friends are studying, request spot saves  
+✅ **Smart Filters**: Filter by distance, noise level, amenities, availability  
+✅ **Push Notifications**: Get alerted when friends save spots or send requests  
+
+### Technical Highlights
+✅ **PostGIS Geospatial Queries**: Efficient proximity search (`ST_DWithin`, `ST_Distance`)  
+✅ **Real-time Updates**: Supabase Realtime for occupancy changes (< 1 second latency)  
+✅ **Cross-Platform**: Single React Native codebase for iOS + Android  
+✅ **Location Services**: Geofencing for automatic check-ins  
+✅ **Scalable Architecture**: Handles 10k+ MAU on free/low-cost tiers  
+
+---
+
+## 📊 Success Metrics (Target)
+
+**MVP Launch (Month 3)**:
+- 500 registered users (5% of UW)
+- 200 DAU (40% retention)
+- 50 verified study spots
+- < 2% crash rate
+
+**Product-Market Fit (Month 6)**:
+- 3,000 MAU
+- 1,000 DAU
+- 150+ spots
+- NPS score > 40
+
+**Growth (Month 12)**:
+- 10,000 MAU (full UW saturation)
+- 300+ spots
+- 500+ active friend connections
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Why? |
+|-------|-----------|------|
+| **Mobile** | React Native + Expo SDK 50 | Cross-platform, fast iteration, OTA updates |
+| **Backend** | Golang 1.21 + Gin | Performance, concurrency, type safety |
+| **Database** | Supabase (PostgreSQL 15 + PostGIS 3.3) | Geospatial queries, realtime, auth, storage |
+| **Hosting** | Railway (backend), Expo EAS (mobile) | Easy deployment, CI/CD |
+| **Maps** | Mapbox via react-native-maps | Custom markers, geofencing |
+| **State** | Zustand | Simple, no boilerplate |
+| **UI** | NativeWind (Tailwind for RN) | Minimalist, utility-first |
+
+---
+
+## 🎨 Design Philosophy
+
+**Minimalist & Modern**:
+- Clean, white space
+- 2-3 colors max (inspired by Apple, Stripe)
+- Utility-first styling (NativeWind)
+- Focus on content, not chrome
+
+**Mobile-First**:
+- Touch-optimized (44px min targets)
+- Gesture-driven navigation
+- Fast load times (< 2 seconds)
+- Offline-capable (cached data)
+
+**Accessibility**:
+- VoiceOver/TalkBack support
+- WCAG AA color contrast
+- Screen reader-friendly labels
+
+---
+
+## 📅 Development Timeline
+
+**10-12 weeks to MVP launch**, optimized for Cursor AI-assisted development:
+
+| Weeks | Phase | Focus |
+|-------|-------|-------|
+| 1-2 | Foundation | Setup, database schema, project structure |
+| 3-4 | Discovery | Map integration, spot listing, filters |
+| 5-6 | Occupancy | Check-in/out, real-time updates |
+| 7-8 | Social | Friends, spot-saving requests |
+| 9-10 | Polish | UI/UX, testing, bug fixes |
+| 11-12 | Launch | App Store submission, marketing, iteration |
+
+See [mvp.md](docs/mvp.md) for detailed week-by-week breakdown.
+
+---
+
+## 🤖 Cursor AI Optimization
+
+This project is designed to maximize Cursor AI's capabilities:
+
+### Leveraging MCPs
+- **Supabase MCP**: Create tables, run queries, apply migrations, generate types
+- **Browser MCP**: Test APIs, verify deployments, capture screenshots
+- **Templation MCP**: Research similar apps, bootstrap components
+
+### Effective Prompts
 ```
-havn/
-├── backend/          # Go backend (Gin + PostgreSQL + Redis)
-├── mobile/           # React Native mobile app
-├── docs/             # Complete documentation
-├── env.example       # Environment template (COPY TO .env)
-├── SECURITY.md       # Security best practices (READ THIS!)
-└── docker-compose.yml # Local development infrastructure
+✅ "Create the spots table with PostGIS geometry column as specified in docs/design.md"
+✅ "Implement the check-in API endpoint with geofence validation"
+✅ "Build the map view screen with real-time occupancy markers"
+✅ "Deploy the Golang backend to Railway"
 ```
 
----
+### What Cursor Handles
+- Boilerplate code (database schemas, API endpoints, UI components)
+- Integration code (connecting services)
+- Bug fixes (async issues, API errors)
+- Refactoring (code cleanup, adding types)
 
-## 📚 Documentation
-
-- **[Project Scope](docs/projectscope.md)** - Overview, goals, tech stack
-- **[MVP Specification](docs/mvp.md)** - Technical requirements, database schema
-- **[Design System](docs/design.md)** - UI/UX patterns, components
-- **[API Specification](docs/api-spec.md)** - Complete API documentation
-- **[Security Guide](SECURITY.md)** - **READ THIS BEFORE DEVELOPMENT!**
-
----
-
-## 🔒 Security
-
-**Before you start development:**
-
-1. ✅ Read `SECURITY.md` completely
-2. ✅ Set up `.env` file (never commit this!)
-3. ✅ Generate strong passwords using the instructions
-4. ✅ Enable pre-commit hooks to prevent secret leaks
-
-**Never commit:**
-- `.env` files
-- Actual passwords or API keys
-- JWT secrets
-- AWS credentials
+### What You Handle
+- UX decisions (user flow, interactions)
+- Design (work with designer, Cursor implements)
+- Architecture decisions (caching, scaling)
+- Business logic edge cases
+- Testing strategy
 
 ---
 
-## 🛠️ Development
+## 🔒 Security & Privacy
 
-### Backend
-```bash
-cd backend
-go run cmd/server/main.go
-```
+**Location Privacy**:
+- Only tracked when app is active and on campus
+- Aggregated for occupancy (individual locations not shown)
+- 30-day auto-deletion
+- Opt-out available
 
-See `backend/README.md` for full details.
+**Data Protection**:
+- HTTPS only (TLS 1.3)
+- JWT-based auth (Supabase)
+- Row-level security (RLS) policies
+- GDPR & FERPA compliant
 
-### Mobile App
-```bash
-cd mobile
-npm start
-```
-
-See `mobile/README.md` for full details.
-
----
-
-## 🚢 Deployment
-
-See individual service READMEs:
-- `backend/README.md` - Backend deployment
-- `mobile/README.md` - Mobile app deployment
+**User Control**:
+- 3 privacy modes: Everyone, Friends Only, No One
+- Ghost mode for using app without sharing location
+- Account deletion removes all personal data
 
 ---
 
-## 🤝 Contributing
+## 💰 Monetization (Future)
 
-1. Never commit secrets or passwords
-2. Follow the coding standards in `.cursorrules`
-3. Write tests for new features
-4. Update documentation
-5. Use conventional commits
+**Phase 1 (Year 1)**: Free for all (focus on growth)  
+**Phase 2 (Year 2)**: Freemium model
+- Free tier: Core features (80%)
+- Premium tier: $4.99/month (predictions, analytics, ad-free)
+- Target: 5-10% conversion
+
+**Phase 3 (Year 2-3)**: B2B partnerships
+- University partnerships ($10-50k/year per campus)
+- Cafe/venue partnerships ($100-500/month)
+
+---
+
+## 🌍 Expansion Plan
+
+**Phase 1**: University of Washington (Seattle) only  
+**Phase 2**: Expand to 4-5 large universities (UCLA, UC Berkeley, UMich)  
+**Phase 3**: National rollout (25+ universities)  
+**Phase 4**: Off-campus spots (cafes, co-working spaces)
+
+---
+
+## 📈 Competitive Advantage
+
+| Solution | Limitation | havn's Edge |
+|----------|-----------|-------------|
+| Google Maps | No real-time occupancy | ✅ Crowd-sourced live data |
+| LibCal/Room Booking | Static, formal spaces only | ✅ Dynamic, informal spots |
+| Facebook Groups | Manual coordination | ✅ Automated spot-saving |
+| Discord | No location integration | ✅ Location-first social |
+
+**White Space**: No existing solution combines real-time occupancy + social coordination + dynamic spot discovery
+
+---
+
+## 🙏 Contributing
+
+This is currently a solo project (Harry Pall + Cursor AI). If you're interested in contributing or have feedback:
+
+- **Email**: [your email]
+- **Twitter**: [@yourusername]
+- **GitHub**: Issues welcome!
 
 ---
 
 ## 📄 License
 
-[Add your license here]
+Proprietary (for now). Open-sourcing certain components (e.g., PostGIS utilities) post-launch.
 
 ---
 
-## 🙏 Acknowledgments
+## 🎯 Next Steps
 
-Built with:
-- Go + Gin Web Framework
-- React Native + Expo
-- PostgreSQL + PostGIS
-- Redis
-- Docker
+1. **Read**: `docs/mvp.md` (what to build)
+2. **Setup**: `docs/setup-tools.md` (install tools)
+3. **Design**: `docs/design.md` (how to build)
+4. **Scope**: `docs/projectscope.md` (full vision)
+5. **Build**: Start Week 1 with Cursor AI!
 
 ---
 
-**Questions?** Check the docs folder or open an issue!
+**Built with ❤️ at UW by Harry Pall + Cursor AI**
+
+*havn: find your place to study*
+
+

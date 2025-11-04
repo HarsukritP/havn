@@ -1,151 +1,95 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 )
 
-// Spot represents a study spot location
+// Spot represents a study location
 type Spot struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Address     string  `json:"address"`
-	
-	// Geospatial
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	
-	// Capacity
-	TotalCapacity    int `json:"total_capacity"`
-	CurrentAvailable *int `json:"current_available"`
-	
-	// Amenities
-	HasWifi       bool `json:"has_wifi"`
-	HasOutlets    bool `json:"has_outlets"`
-	HasPrinter    bool `json:"has_printer"`
-	IsQuietZone   bool `json:"is_quiet_zone"`
-	IsOutdoor     bool `json:"is_outdoor"`
-	
-	// Status
-	AvailabilityStatus string  `json:"availability_status"` // available, low, full
-	ConfidenceScore    float64 `json:"confidence_score"`
-	LastUpdateAt       *time.Time `json:"last_update_at,omitempty"`
-	
-	// Distance (calculated, not stored)
-	DistanceMeters *float64 `json:"distance_meters,omitempty"`
-	
-	// Metadata
-	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID               string          `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	Name             string          `json:"name" gorm:"type:varchar(200);not null"`
+	BuildingName     string          `json:"building_name" gorm:"type:varchar(200)"`
+	FloorNumber      string          `json:"floor_number" gorm:"type:varchar(10)"`
+	Location         string          `json:"-" gorm:"type:geometry(Point,4326);not null"` // PostGIS geometry
+	Latitude         float64         `json:"latitude" gorm:"-"`                            // Computed
+	Longitude        float64         `json:"longitude" gorm:"-"`                           // Computed
+	DistanceMeters   float64         `json:"distance_meters,omitempty" gorm:"-"`           // Computed
+	Address          string          `json:"address,omitempty"`
+	SpotType         string          `json:"spot_type" gorm:"type:varchar(50);not null"`
+	Capacity         int             `json:"capacity" gorm:"default:50"`
+	CurrentOccupancy int             `json:"current_occupancy" gorm:"default:0"`
+	OccupancyPercent int             `json:"occupancy_percentage" gorm:"-"` // Computed
+	OccupancyStatus  string          `json:"occupancy_status" gorm:"-"`     // Computed: low|moderate|high
+	Amenities        JSONB           `json:"amenities" gorm:"type:jsonb"`
+	Hours            JSONB           `json:"hours" gorm:"type:jsonb"`
+	PhotoURLs        []string        `json:"photo_urls,omitempty" gorm:"type:text[]"`
+	IsVerified       bool            `json:"is_verified" gorm:"default:false"`
+	VerifiedBy       *string         `json:"verified_by,omitempty" gorm:"type:uuid"`
+	VerifiedAt       *time.Time      `json:"verified_at,omitempty"`
+	AvgRating        float64         `json:"avg_rating" gorm:"type:decimal(2,1);default:0.0"`
+	TotalReviews     int             `json:"total_reviews" gorm:"default:0"`
+	CreatedBy        *string         `json:"created_by,omitempty" gorm:"type:uuid"`
+	CreatedAt        time.Time       `json:"created_at" gorm:"default:now()"`
+	UpdatedAt        time.Time       `json:"updated_at" gorm:"default:now()"`
+	IsOpenNow        bool            `json:"is_open_now" gorm:"-"` // Computed
+	FriendsHere      []FriendAtSpot  `json:"friends_here,omitempty" gorm:"-"`
 }
 
-// Amenities represents spot amenities (for JSON response)
-type Amenities struct {
-	Wifi      bool `json:"wifi"`
-	Outlets   bool `json:"outlets"`
-	Printer   bool `json:"printer"`
-	QuietZone bool `json:"quiet_zone"`
-	Outdoor   bool `json:"outdoor"`
+// FriendAtSpot represents a friend currently at a spot
+type FriendAtSpot struct {
+	UserID       string    `json:"user_id"`
+	Username     string    `json:"username"`
+	FullName     string    `json:"full_name"`
+	AvatarURL    string    `json:"avatar_url,omitempty"`
+	CheckedInAt  time.Time `json:"checked_in_at"`
 }
 
-// SpotWithAmenities returns spot data with amenities structured
-func (s *Spot) WithAmenities() map[string]interface{} {
-	return map[string]interface{}{
-		"id":          s.ID,
-		"name":        s.Name,
-		"description": s.Description,
-		"address":     s.Address,
-		"latitude":    s.Latitude,
-		"longitude":   s.Longitude,
-		"total_capacity": s.TotalCapacity,
-		"current_available": s.CurrentAvailable,
-		"availability_status": s.AvailabilityStatus,
-		"confidence_score": s.ConfidenceScore,
-		"last_update_at": s.LastUpdateAt,
-		"distance_meters": s.DistanceMeters,
-		"amenities": Amenities{
-			Wifi:      s.HasWifi,
-			Outlets:   s.HasOutlets,
-			Printer:   s.HasPrinter,
-			QuietZone: s.IsQuietZone,
-			Outdoor:   s.IsOutdoor,
-		},
-		"created_at": s.CreatedAt,
-		"updated_at": s.UpdatedAt,
+// JSONB is a custom type for PostgreSQL JSONB fields
+type JSONB map[string]interface{}
+
+// Value implements driver.Valuer interface
+func (j JSONB) Value() (driver.Value, error) {
+	return json.Marshal(j)
+}
+
+// Scan implements sql.Scanner interface
+func (j *JSONB) Scan(value interface{}) error {
+	if value == nil {
+		*j = make(map[string]interface{})
+		return nil
 	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return json.Unmarshal([]byte(value.(string)), j)
+	}
+
+	return json.Unmarshal(bytes, j)
 }
 
-// UpdateSpotRequest represents a request to update spot availability
-type UpdateSpotRequest struct {
-	SeatsAvailable int     `json:"seats_available" binding:"required,min=0"`
-	NoiseLevel     *string `json:"noise_level,omitempty" binding:"omitempty,oneof=quiet moderate loud"`
-	PhotoURL       *string `json:"photo_url,omitempty"`
-	UserLatitude   float64 `json:"user_latitude" binding:"required"`
-	UserLongitude  float64 `json:"user_longitude" binding:"required"`
+// TableName specifies the table name for GORM
+func (Spot) TableName() string {
+	return "spots"
 }
 
-// SpotUpdate represents a user's spot availability update
-type SpotUpdate struct {
-	ID        string  `json:"id"`
-	SpotID    string  `json:"spot_id"`
-	UserID    string  `json:"user_id"`
-	
-	// Update data
-	SeatsAvailable int     `json:"seats_available"`
-	NoiseLevel     *string `json:"noise_level,omitempty"`
-	PhotoURL       *string `json:"photo_url,omitempty"`
-	
-	// Location verification
-	UserLatitude      float64 `json:"user_latitude"`
-	UserLongitude     float64 `json:"user_longitude"`
-	DistanceFromSpot  float64 `json:"distance_from_spot"`
-	
-	// Quality metrics
-	ConfidenceScore float64 `json:"confidence_score"`
-	IsAccurate      *bool   `json:"is_accurate,omitempty"`
-	
-	CreatedAt time.Time `json:"created_at"`
-}
+// CalculateOccupancyStatus determines the occupancy status
+func (s *Spot) CalculateOccupancyStatus() {
+	if s.Capacity == 0 {
+		s.OccupancyPercent = 0
+		s.OccupancyStatus = "low"
+		return
+	}
 
-// RecentUpdate represents a simplified update for spot history
-type RecentUpdate struct {
-	SeatsAvailable int       `json:"seats_available"`
-	NoiseLevel     *string   `json:"noise_level,omitempty"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	UpdatedBy      string    `json:"updated_by"` // "Anonymous" for privacy
-}
+	s.OccupancyPercent = (s.CurrentOccupancy * 100) / s.Capacity
 
-// GetSpotsParams represents query parameters for fetching spots
-type GetSpotsParams struct {
-	Latitude  *float64 `form:"lat"`
-	Longitude *float64 `form:"lng"`
-	Radius    *int     `form:"radius"`
-	Page      *int     `form:"page"`
-	Limit     *int     `form:"limit"`
-}
-
-// UpdateResponse represents the response after submitting an update
-type UpdateResponse struct {
-	Update      *SpotUpdate        `json:"update"`
-	Rewards     *RewardsData       `json:"rewards"`
-	SpotUpdated *SpotStatusUpdate  `json:"spot_updated"`
-}
-
-// RewardsData represents points and streak information
-type RewardsData struct {
-	PointsEarned      int  `json:"points_earned"`
-	AccuracyBonus     int  `json:"accuracy_bonus"`
-	TotalPointsEarned int  `json:"total_points_earned"`
-	UserTotalPoints   int  `json:"user_total_points"`
-	StreakUpdated     bool `json:"streak_updated"`
-	CurrentStreak     int  `json:"current_streak"`
-}
-
-// SpotStatusUpdate represents updated spot status
-type SpotStatusUpdate struct {
-	CurrentAvailable   int     `json:"current_available"`
-	AvailabilityStatus string  `json:"availability_status"`
-	ConfidenceScore    float64 `json:"confidence_score"`
+	if s.OccupancyPercent <= 33 {
+		s.OccupancyStatus = "low"
+	} else if s.OccupancyPercent <= 66 {
+		s.OccupancyStatus = "moderate"
+	} else {
+		s.OccupancyStatus = "high"
+	}
 }
 
