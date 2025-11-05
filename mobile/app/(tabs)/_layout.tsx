@@ -1,34 +1,41 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuthStore } from '../../stores/authStore';
 
-// Named icon components with displayName
-const MapIcon = ({ color, size }: { color: string; size: number }) => (
-  <Ionicons name="map" size={size} color={color} />
-);
-MapIcon.displayName = 'MapIcon';
+export default function TabsLayout() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-const FriendsIcon = ({ color, size }: { color: string; size: number }) => (
-  <Ionicons name="people" size={size} color={color} />
-);
-FriendsIcon.displayName = 'FriendsIcon';
+  // Protect tabs - redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/(auth)/login');
+    }
+  }, [isLoading, isAuthenticated]);
 
-const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
-  <Ionicons name="person" size={size} color={color} />
-);
-ProfileIcon.displayName = 'ProfileIcon';
+  // Show nothing while checking auth
+  if (isLoading) {
+    return null;
+  }
 
-function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#9ca3af',
         headerShown: false,
+        tabBarActiveTintColor: '#FF6B6B',
+        tabBarInactiveTintColor: '#999',
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#fff',
+          borderTopColor: '#eee',
           borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
         },
       }}
     >
@@ -36,27 +43,29 @@ function TabLayout() {
         name="index"
         options={{
           title: 'Map',
-          tabBarIcon: MapIcon,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="map-marker-radius" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
-          tabBarIcon: FriendsIcon,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ProfileIcon,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-circle" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
 }
-
-TabLayout.displayName = 'TabLayout';
-
-export default TabLayout;
