@@ -1,7 +1,8 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function TabLayout() {
+function TabLayout() {
   return (
     <Tabs
       screenOptions={{
@@ -45,4 +46,8 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+TabLayout.displayName = 'TabLayout';
+
+export default TabLayout;
 
