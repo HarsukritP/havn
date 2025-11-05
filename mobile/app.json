@@ -31,7 +31,8 @@
     "extra": {
       "eas": {
         "projectId": "63b8421a-2bff-44b2-a74b-fde163fa06f0"
-      }
+      },
+      "apiUrl": "https://havnapi.up.railway.app/api/v1"
     }
   }
 }

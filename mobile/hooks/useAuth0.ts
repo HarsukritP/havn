@@ -7,9 +7,6 @@ import { useAuthStore } from '../stores/authStore';
 // This is required for web browser authentication
 WebBrowser.maybeCompleteAuthSession();
 
-// Auth0 discovery endpoint
-const discovery = AuthSession.useAutoDiscovery(`https://${auth0Config.domain}`);
-
 export interface Auth0User {
   sub: string;
   name?: string;
@@ -30,6 +27,9 @@ export function useAuth0() {
   const { setSession, setProfile } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auth0 discovery endpoint - must be called inside the hook
+  const discovery = AuthSession.useAutoDiscovery(`https://${auth0Config.domain}`);
 
   // Create auth request
   const [request, result, promptAsync] = AuthSession.useAuthRequest(

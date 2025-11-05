@@ -1,11 +1,10 @@
-import { supabase } from './supabase';
+import { useAuthStore } from '../stores/authStore';
+import { config } from '../config/env';
 
-const API_URL = __DEV__ 
-  ? 'http://localhost:8080/api/v1'
-  : 'https://havn-backend.railway.app/api/v1';
+const API_URL = config.apiUrl;
 
 async function getAuthToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = useAuthStore.getState().session;
   return session?.access_token || null;
 }
 

@@ -1,155 +1,106 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   SafeAreaView,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
+import { useAuth0 } from '../../hooks/useAuth0';
+
+/**
+ * Auth0-based Login Screen
+ * 
+ * Uses Auth0's Universal Login with support for:
+ * - Google OAuth
+ * - Email/Password authentication
+ * - Social connections (configurable in Auth0 dashboard)
+ */
 
 function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const { login, isLoading, error, isReady } = useAuth0();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (error) throw error;
-
-      // Navigation is handled by root layout auth listener
-    } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
-    } finally {
-      setLoading(false);
+      await login();
+      // Auth0 hook will handle the redirect and token exchange
+      // Once successful, the auth state will update and user will be redirected to tabs
+    } catch (err) {
+      console.error('Login error:', err);
     }
-  };
-
-  const handleGoogleLogin = async () => {
-    Alert.alert('Coming Soon', 'Google OAuth will be available soon!');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.logo}>havn</Text>
-          <Text style={styles.tagline}>Find your study spot</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.logo}>havn</Text>
+        <Text style={styles.tagline}>Find your study spot at UW</Text>
+      </View>
+
+      {/* Main Content */}
+      <View style={styles.content}>
+        <View style={styles.welcomeContainer}>
+          <Ionicons name="school-outline" size={80} color="#6366f1" />
+          <Text style={styles.welcomeTitle}>Welcome to Havn</Text>
+          <Text style={styles.welcomeText}>
+            Discover and share study spots at University of Waterloo
+          </Text>
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color="#9ca3af" />
-              <TextInput
-                style={styles.input}
-                placeholder="you@uwaterloo.ca"
-                placeholderTextColor="#9ca3af"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-              />
-            </View>
+        {/* Features List */}
+        <View style={styles.featuresList}>
+          <View style={styles.featureItem}>
+            <Ionicons name="map" size={24} color="#6366f1" />
+            <Text style={styles.featureText}>Find nearby study spots</Text>
           </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" />
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#9ca3af"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                textContentType="password"
-                autoComplete="password"
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#9ca3af"
-                />
-              </TouchableOpacity>
-            </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="people" size={24} color="#6366f1" />
+            <Text style={styles.featureText}>See where friends are studying</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.forgotButton}
-            onPress={() => Alert.alert('Coming Soon', 'Password reset will be available soon!')}
-          >
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-            disabled={loading}
-          >
-            <Ionicons name="logo-google" size={20} color="#111827" />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          </TouchableOpacity>
-
-          <View style={styles.signupPrompt}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <Text style={styles.signupLink}>Sign up</Text>
-            </TouchableOpacity>
+          <View style={styles.featureItem}>
+            <Ionicons name="bookmark" size={24} color="#6366f1" />
+            <Text style={styles.featureText}>Save spots for later</Text>
           </View>
         </View>
-      </KeyboardAvoidingView>
+
+        {error && (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle" size={20} color="#ef4444" />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Login Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.loginButton, (!isReady || isLoading) && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={!isReady || isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <Ionicons name="log-in-outline" size={24} color="white" />
+              <Text style={styles.loginButtonText}>Continue to Sign In</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.infoText}>
+          You'll be able to sign in with Google, email, or other methods
+        </Text>
+
+        <Text style={styles.privacyText}>
+          By signing in, you agree to our Terms of Service and Privacy Policy
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -158,9 +109,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',
-  },
-  keyboardView: {
-    flex: 1,
   },
   header: {
     alignItems: 'center',
@@ -176,111 +124,95 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
   },
-  form: {
+  content: {
     flex: 1,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    paddingHorizontal: 24,
   },
-  title: {
+  welcomeContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  welcomeTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#111827',
+    marginTop: 24,
     marginBottom: 8,
   },
-  subtitle: {
+  welcomeText: {
     fontSize: 16,
     color: '#6b7280',
-    marginBottom: 32,
+    textAlign: 'center',
   },
-  inputContainer: {
-    marginBottom: 20,
+  featuresList: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    gap: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  inputWrapper: {
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    gap: 12,
   },
-  input: {
-    flex: 1,
-    marginLeft: 12,
+  featureText: {
     fontSize: 16,
     color: '#111827',
   },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fee2e2',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
   },
-  forgotText: {
+  errorText: {
     fontSize: 14,
-    color: '#6366f1',
-    fontWeight: '500',
+    color: '#dc2626',
+    flex: 1,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   loginButton: {
     backgroundColor: '#6366f1',
     borderRadius: 12,
     paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#9ca3af',
   },
   loginButtonText: {
     color: 'white',
-    fontSize: 16,
     fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e7eb',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    gap: 12,
-  },
-  googleButtonText: {
-    color: '#111827',
     fontSize: 16,
-    fontWeight: '600',
   },
-  signupPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  signupText: {
+  infoText: {
     fontSize: 14,
     color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 8,
   },
-  signupLink: {
+  privacyText: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  linkButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  linkText: {
     fontSize: 14,
     color: '#6366f1',
     fontWeight: '600',
@@ -290,3 +222,5 @@ const styles = StyleSheet.create({
 LoginScreen.displayName = 'LoginScreen';
 
 export default LoginScreen;
+
+
