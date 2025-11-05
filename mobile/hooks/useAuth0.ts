@@ -32,14 +32,19 @@ export function useAuth0() {
   const discovery = AuthSession.useAutoDiscovery(`https://${auth0Config.domain}`);
 
   // Create auth request
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: 'havnapp',
+    path: 'auth',
+  });
+  
+  // Debug: Log the exact redirect URI being used
+  console.log('🔍 Auth0 Redirect URI:', redirectUri);
+  
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: auth0Config.clientId,
       scopes: auth0Config.scope.split(' '),
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'havnapp',
-        path: 'auth',
-      }),
+      redirectUri,
       extraParams: {
         audience: auth0Config.audience,
       },
