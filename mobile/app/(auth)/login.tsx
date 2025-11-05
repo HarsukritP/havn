@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,28 +14,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../stores/authStore';
 
 function LoginScreen() {
   const router = useRouter();
-  const { initialize, isAuthenticated } = useAuthStore();
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Initialize auth store on mount
-  useEffect(() => {
-    initialize().catch(console.error);
-  }, []);
-
-  // Check if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -52,7 +37,7 @@ function LoginScreen() {
 
       if (error) throw error;
 
-      // Navigation is handled by auth state listener
+      // Navigation is handled by root layout auth listener
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);
     } finally {
@@ -305,4 +290,3 @@ const styles = StyleSheet.create({
 LoginScreen.displayName = 'LoginScreen';
 
 export default LoginScreen;
-

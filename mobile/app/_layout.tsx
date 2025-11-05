@@ -1,6 +1,7 @@
-import React from 'react';
-import { Stack } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAuthStore } from '../stores/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,10 +14,33 @@ const queryClient = new QueryClient({
 });
 
 function RootNavigator() {
+  const segments = useSegments();
+  const router = useRouter();
+  const { initialize, isAuthenticated, isLoading } = useAuthStore();
+
+  // Initialize auth ONCE on mount
+  useEffect(() => {
+    initialize().catch(console.error);
+  }, []);
+
+  // Handle navigation based on auth state
+  useEffect(() => {
+    if (isLoading) return; // Don't navigate while loading
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      // Not authenticated, redirect to login
+      router.replace('/(auth)/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      // Authenticated but on login screen, redirect to tabs
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, segments, isLoading]);
+
   return (
     <Stack 
       screenOptions={{ headerShown: false }}
-      initialRouteName="(auth)"
     >
       <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
       <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
@@ -39,4 +63,3 @@ function RootLayout() {
 RootLayout.displayName = 'RootLayout';
 
 export default RootLayout;
-
