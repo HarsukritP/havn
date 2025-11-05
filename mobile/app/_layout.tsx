@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
@@ -17,31 +17,35 @@ function RootNavigator() {
   const segments = useSegments();
   const router = useRouter();
   const { initialize, isAuthenticated, isLoading } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
 
   // Initialize auth ONCE on mount
   useEffect(() => {
-    initialize().catch(console.error);
+    initialize()
+      .then(() => setIsMounted(true))
+      .catch((err) => {
+        console.error('Auth init error:', err);
+        setIsMounted(true);
+      });
   }, []);
 
-  // Handle navigation based on auth state
+  // Handle navigation AFTER component is mounted
   useEffect(() => {
-    if (isLoading) return; // Don't navigate while loading
+    if (!isMounted || isLoading) return; // Wait for mount and auth
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!isAuthenticated && !inAuthGroup) {
-      // Not authenticated, redirect to login
-      router.replace('/(auth)/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      // Authenticated but on login screen, redirect to tabs
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated, segments, isLoading]);
+    setTimeout(() => {
+      if (!isAuthenticated && !inAuthGroup) {
+        router.replace('/(auth)/login');
+      } else if (isAuthenticated && inAuthGroup) {
+        router.replace('/(tabs)');
+      }
+    }, 0);
+  }, [isAuthenticated, segments, isLoading, isMounted]);
 
   return (
-    <Stack 
-      screenOptions={{ headerShown: false }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
       <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
       <Stack.Screen name="spot/[id]" options={{ presentation: 'card' }} />
