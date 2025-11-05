@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../stores/authStore';
 
 function SignupScreen() {
   const router = useRouter();
+  const { initialize } = useAuthStore();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -26,6 +29,11 @@ function SignupScreen() {
   const [major, setMajor] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Initialize auth on mount
+  useEffect(() => {
+    initialize().catch(console.error);
+  }, []);
 
   const handleSignup = async () => {
     if (!email || !password || !username) {
