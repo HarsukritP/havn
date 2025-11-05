@@ -29,12 +29,18 @@ function ProfileScreen() {
     queryKey: ['profile'],
     queryFn: async () => {
       const response = await usersApi.getProfile();
-      setEditName(response.data.profile.full_name || '');
-      setEditMajor(response.data.profile.major || '');
       return response.data.profile;
     },
     enabled: isAuthenticated,
   });
+
+  // Update edit fields when profile data changes
+  React.useEffect(() => {
+    if (profileData) {
+      setEditName(profileData.full_name || '');
+      setEditMajor(profileData.major || '');
+    }
+  }, [profileData]);
 
   const updateProfileMutation = useMutation({
     mutationFn: (updates: Record<string, any>) => usersApi.updateProfile(updates),
