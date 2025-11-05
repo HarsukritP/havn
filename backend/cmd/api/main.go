@@ -48,6 +48,12 @@ func main() {
 
 	log.Info().Msg("Database connection established")
 
+	// Initialize Auth0 JWT verification
+	if err := middleware.InitAuth0(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to initialize Auth0")
+	}
+	log.Info().Msg("Auth0 JWT verification initialized")
+
 	// Initialize services
 	spotService := services.NewSpotService(db)
 	occupancyService := services.NewOccupancyService(db)
@@ -91,9 +97,9 @@ func main() {
 			auth.POST("/login", userHandler.Login)
 		}
 
-		// Protected routes (require authentication)
+		// Protected routes (require Auth0 authentication)
 		protected := api.Group("")
-		protected.Use(middleware.Auth())
+		protected.Use(middleware.Auth0Middleware())
 		{
 			// Spots
 			spots := protected.Group("/spots")
