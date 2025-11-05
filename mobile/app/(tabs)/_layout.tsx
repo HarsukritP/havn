@@ -2,6 +2,22 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+// Named icon components with displayName
+const MapIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="map" size={size} color={color} />
+);
+MapIcon.displayName = 'MapIcon';
+
+const FriendsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="people" size={size} color={color} />
+);
+FriendsIcon.displayName = 'FriendsIcon';
+
+const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="person" size={size} color={color} />
+);
+ProfileIcon.displayName = 'ProfileIcon';
+
 function TabLayout() {
   return (
     <Tabs
@@ -20,27 +36,21 @@ function TabLayout() {
         name="index"
         options={{
           title: 'Map',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map" size={size} color={color} />
-          ),
+          tabBarIcon: MapIcon,
         }}
       />
       <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
-          ),
+          tabBarIcon: FriendsIcon,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
+          tabBarIcon: ProfileIcon,
         }}
       />
     </Tabs>
@@ -50,4 +60,3 @@ function TabLayout() {
 TabLayout.displayName = 'TabLayout';
 
 export default TabLayout;
-
