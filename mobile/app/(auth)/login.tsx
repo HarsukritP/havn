@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '../../stores/authStore';
 
 function LoginScreen() {
   const router = useRouter();
@@ -21,6 +22,19 @@ function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { initialize, isAuthenticated } = useAuthStore();
+
+  // Initialize auth store on mount
+  useEffect(() => {
+    initialize().catch(console.error);
+  }, []);
+
+  // Check if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = async () => {
     if (!email || !password) {

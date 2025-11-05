@@ -280,7 +280,7 @@ function SpotDetailsScreen() {
                 <View key={day} style={styles.hoursRow}>
                   <Text style={styles.dayText}>{day}</Text>
                   <Text style={styles.hoursText}>
-                    {Array.isArray(hours) ? hours.join(', ') : hours}
+                    {Array.isArray(hours) ? hours.join(', ') : String(hours)}
                   </Text>
                 </View>
               ))}

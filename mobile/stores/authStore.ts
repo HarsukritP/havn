@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   profile: null,
-  isLoading: true,
+  isLoading: false,
   isAuthenticated: false,
 
   setSession: (session) => {
@@ -35,7 +35,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
     set({
       session: null,
       user: null,
@@ -46,8 +50,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
+      set({ isLoading: true });
       const { data: { session } } = await supabase.auth.getSession();
       get().setSession(session);
+      
+      // Set up auth state listener AFTER initial session is fetched
+      supabase.auth.onAuthStateChange((_event, session) => {
+        get().setSession(session);
+      });
     } catch (error) {
       console.error('Failed to initialize auth:', error);
     } finally {
@@ -55,9 +65,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 }));
-
-// Listen for auth changes
-supabase.auth.onAuthStateChange((_event, session) => {
-  useAuthStore.getState().setSession(session);
-});
 
