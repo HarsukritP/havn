@@ -31,13 +31,14 @@ interface FriendRequest {
 
 function FriendsScreen() {
   const router = useRouter();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const queryClient = useQueryClient();
+  
   const [activeTab, setActiveTab] = useState<'friends' | 'requests'>('friends');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const queryClient = useQueryClient();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const { data: friendsData, isLoading: friendsLoading } = useQuery({
     queryKey: ['friends'],
@@ -97,6 +98,7 @@ function FriendsScreen() {
   const receivedRequests: FriendRequest[] = friendsData?.received_requests || [];
   const sentRequests: FriendRequest[] = friendsData?.sent_requests || [];
 
+  // Render not authenticated state
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container}>
@@ -118,6 +120,7 @@ function FriendsScreen() {
     );
   }
 
+  // Render main content
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -163,21 +166,19 @@ function FriendsScreen() {
                   </View>
                   <View style={styles.userInfo}>
                     <Text style={styles.userName}>{user.full_name || user.username}</Text>
-                    <Text style={styles.userMeta}>@{user.username}</Text>
+                    <Text style={styles.userEmail}>@{user.username}</Text>
                   </View>
-                  {user.is_friend ? (
-                    <View style={styles.friendBadge}>
-                      <Text style={styles.friendBadgeText}>Friends</Text>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.addButton}
-                      onPress={() => sendRequestMutation.mutate(user.id)}
-                      disabled={sendRequestMutation.isPending}
-                    >
-                      <Ionicons name="add-circle" size={24} color="#6366f1" />
-                    </TouchableOpacity>
-                  )}
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => sendRequestMutation.mutate(user.id)}
+                    disabled={sendRequestMutation.isPending}
+                  >
+                    {sendRequestMutation.isPending ? (
+                      <ActivityIndicator size="small" color="#6366f1" />
+                    ) : (
+                      <Ionicons name="person-add" size={20} color="#6366f1" />
+                    )}
+                  </TouchableOpacity>
                 </View>
               ))}
             </ScrollView>
@@ -186,152 +187,136 @@ function FriendsScreen() {
       )}
 
       {/* Tabs */}
-      <View style={styles.tabs}>
+      <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'friends' && styles.tabActive]}
+          style={[styles.tab, activeTab === 'friends' && styles.activeTab]}
           onPress={() => setActiveTab('friends')}
         >
-          <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>
-            Friends ({friends.length})
+          <Text style={[styles.tabText, activeTab === 'friends' && styles.activeTabText]}>
+            Friends
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'requests' && styles.tabActive]}
+          style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
           onPress={() => setActiveTab('requests')}
         >
-          <Text style={[styles.tabText, activeTab === 'requests' && styles.tabTextActive]}>
-            Requests ({receivedRequests.length})
+          <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
+            Requests {(receivedRequests.length + sentRequests.length) > 0 && `(${receivedRequests.length + sentRequests.length})`}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.scrollView}>
-        {activeTab === 'friends' ? (
-          friendsLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#6366f1" />
-            </View>
-          ) : friends.length === 0 ? (
+      {friendsLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6366f1" />
+        </View>
+      ) : activeTab === 'friends' ? (
+        <ScrollView style={styles.content}>
+          {friends.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="people-outline" size={64} color="#9ca3af" />
               <Text style={styles.emptyTitle}>No Friends Yet</Text>
-              <Text style={styles.emptyText}>
-                Search for friends to start seeing where they study
-              </Text>
+              <Text style={styles.emptyText}>Search for users above to add friends</Text>
             </View>
           ) : (
-            <View style={styles.listContainer}>
-              {friends.map((friend) => (
-                <View key={friend.id} style={styles.friendCard}>
+            friends.map((friend) => (
+              <View key={friend.id} style={styles.friendCard}>
+                <View style={styles.friendAvatar}>
+                  <Text style={styles.friendAvatarText}>
+                    {friend.full_name?.charAt(0) || friend.username.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.friendInfo}>
+                  <Text style={styles.friendName}>{friend.full_name || friend.username}</Text>
+                  <Text style={styles.friendUsername}>@{friend.username}</Text>
+                  {friend.current_spot_name && (
+                    <View style={styles.locationBadge}>
+                      <Ionicons name="location" size={12} color="#6366f1" />
+                      <Text style={styles.locationText}>{friend.current_spot_name}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))
+          )}
+        </ScrollView>
+      ) : (
+        <ScrollView style={styles.content}>
+          {/* Received Requests */}
+          {receivedRequests.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Received Requests</Text>
+              {receivedRequests.map((request) => (
+                <View key={request.friendship_id} style={styles.requestCard}>
                   <View style={styles.friendAvatar}>
                     <Text style={styles.friendAvatarText}>
-                      {friend.full_name?.charAt(0) || friend.username.charAt(0).toUpperCase()}
+                      {request.user.full_name?.charAt(0) || request.user.username.charAt(0).toUpperCase()}
                     </Text>
                   </View>
                   <View style={styles.friendInfo}>
-                    <Text style={styles.friendName}>{friend.full_name || friend.username}</Text>
-                    <Text style={styles.friendMeta}>
-                      {friend.current_spot_name ? (
-                        <>
-                          <Ionicons name="location" size={12} color="#10b981" /> {friend.current_spot_name}
-                        </>
-                      ) : (
-                        'Not checked in'
-                      )}
-                    </Text>
+                    <Text style={styles.friendName}>{request.user.full_name || request.user.username}</Text>
+                    <Text style={styles.friendUsername}>@{request.user.username}</Text>
                   </View>
-                  {friend.current_spot_name && (
-                    <View style={styles.activeDot} />
-                  )}
+                  <View style={styles.requestActions}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.acceptButton]}
+                      onPress={() => respondToRequestMutation.mutate({
+                        friendshipId: request.friendship_id,
+                        response: 'accepted'
+                      })}
+                      disabled={respondToRequestMutation.isPending}
+                    >
+                      <Ionicons name="checkmark" size={20} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.declineButton]}
+                      onPress={() => respondToRequestMutation.mutate({
+                        friendshipId: request.friendship_id,
+                        response: 'declined'
+                      })}
+                      disabled={respondToRequestMutation.isPending}
+                    >
+                      <Ionicons name="close" size={20} color="white" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
-            </View>
-          )
-        ) : (
-          <View style={styles.listContainer}>
-            {receivedRequests.length === 0 && sentRequests.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="mail-outline" size={64} color="#9ca3af" />
-                <Text style={styles.emptyTitle}>No Requests</Text>
-                <Text style={styles.emptyText}>
-                  You don't have any pending friend requests
-                </Text>
-              </View>
-            ) : (
-              <>
-                {receivedRequests.length > 0 && (
-                  <View style={styles.requestsSection}>
-                    <Text style={styles.sectionTitle}>Received</Text>
-                    {receivedRequests.map((request) => (
-                      <View key={request.friendship_id} style={styles.requestCard}>
-                        <View style={styles.requestInfo}>
-                          <View style={styles.requestAvatar}>
-                            <Text style={styles.requestAvatarText}>
-                              {request.user.full_name?.charAt(0) || request.user.username.charAt(0).toUpperCase()}
-                            </Text>
-                          </View>
-                          <View>
-                            <Text style={styles.requestName}>
-                              {request.user.full_name || request.user.username}
-                            </Text>
-                            <Text style={styles.requestMeta}>@{request.user.username}</Text>
-                          </View>
-                        </View>
-                        <View style={styles.requestActions}>
-                          <TouchableOpacity
-                            style={[styles.requestButton, styles.acceptButton]}
-                            onPress={() =>
-                              respondToRequestMutation.mutate({
-                                friendshipId: request.friendship_id,
-                                response: 'accepted',
-                              })
-                            }
-                          >
-                            <Ionicons name="checkmark" size={20} color="white" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.requestButton, styles.declineButton]}
-                            onPress={() =>
-                              respondToRequestMutation.mutate({
-                                friendshipId: request.friendship_id,
-                                response: 'declined',
-                              })
-                            }
-                          >
-                            <Ionicons name="close" size={20} color="white" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
+            </>
+          )}
 
-                {sentRequests.length > 0 && (
-                  <View style={styles.requestsSection}>
-                    <Text style={styles.sectionTitle}>Sent</Text>
-                    {sentRequests.map((request) => (
-                      <View key={request.friendship_id} style={styles.sentRequestCard}>
-                        <View style={styles.sentRequestAvatar}>
-                          <Text style={styles.sentRequestAvatarText}>
-                            {request.user.full_name?.charAt(0) || request.user.username.charAt(0).toUpperCase()}
-                          </Text>
-                        </View>
-                        <View style={styles.sentRequestInfo}>
-                          <Text style={styles.sentRequestName}>
-                            {request.user.full_name || request.user.username}
-                          </Text>
-                          <Text style={styles.sentRequestMeta}>Pending</Text>
-                        </View>
-                      </View>
-                    ))}
+          {/* Sent Requests */}
+          {sentRequests.length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, receivedRequests.length > 0 && { marginTop: 24 }]}>
+                Sent Requests
+              </Text>
+              {sentRequests.map((request) => (
+                <View key={request.friendship_id} style={styles.requestCard}>
+                  <View style={styles.friendAvatar}>
+                    <Text style={styles.friendAvatarText}>
+                      {request.user.full_name?.charAt(0) || request.user.username.charAt(0).toUpperCase()}
+                    </Text>
                   </View>
-                )}
-              </>
-            )}
-          </View>
-        )}
-      </ScrollView>
+                  <View style={styles.friendInfo}>
+                    <Text style={styles.friendName}>{request.user.full_name || request.user.username}</Text>
+                    <Text style={styles.friendUsername}>@{request.user.username}</Text>
+                    <Text style={styles.pendingText}>Pending...</Text>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+
+          {receivedRequests.length === 0 && sentRequests.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="mail-outline" size={64} color="#9ca3af" />
+              <Text style={styles.emptyTitle}>No Requests</Text>
+              <Text style={styles.emptyText}>You don't have any friend requests</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -342,47 +327,44 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#111827',
   },
   subtitle: {
     fontSize: 14,
     color: '#6b7280',
+    marginTop: 2,
   },
   searchButton: {
     padding: 8,
   },
   searchContainer: {
     backgroundColor: 'white',
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
   },
   searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f3f4f6',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 8,
     fontSize: 16,
     color: '#111827',
   },
@@ -402,204 +384,171 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#e0e7ff',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   userAvatarText: {
-    fontSize: 16,
+    color: 'white',
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#6366f1',
   },
   userInfo: {
     flex: 1,
+    marginLeft: 12,
   },
   userName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
   },
-  userMeta: {
+  userEmail: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 2,
-  },
-  friendBadge: {
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  friendBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#10b981',
   },
   addButton: {
-    padding: 4,
+    padding: 8,
   },
-  tabs: {
+  tabsContainer: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 8,
-    padding: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 16,
     alignItems: 'center',
-    borderRadius: 6,
   },
-  tabActive: {
-    backgroundColor: '#6366f1',
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#6366f1',
   },
   tabText: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: 16,
     fontWeight: '500',
+    color: '#6b7280',
   },
-  tabTextActive: {
-    color: 'white',
+  activeTabText: {
+    color: '#6366f1',
+    fontWeight: '600',
   },
-  scrollView: {
+  content: {
     flex: 1,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 64,
+    padding: 32,
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#111827',
     marginTop: 16,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6b7280',
-    marginTop: 8,
     textAlign: 'center',
+    marginTop: 8,
   },
   signInButton: {
     backgroundColor: '#6366f1',
-    borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    marginTop: 24,
+    borderRadius: 12,
+    marginTop: 16,
   },
   signInButtonText: {
     color: 'white',
-    fontWeight: '600',
     fontSize: 16,
-  },
-  listContainer: {
-    padding: 16,
+    fontWeight: '600',
   },
   friendCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    padding: 16,
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   friendAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#e0e7ff',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   friendAvatarText: {
+    color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#6366f1',
   },
   friendInfo: {
     flex: 1,
+    marginLeft: 12,
   },
   friendName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
   },
-  friendMeta: {
+  friendUsername: {
     fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
   },
-  activeDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#10b981',
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
-  requestsSection: {
-    marginBottom: 24,
+  locationText: {
+    fontSize: 12,
+    color: '#6366f1',
+    marginLeft: 4,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 12,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
   },
   requestCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  requestInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  requestAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e7ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  requestAvatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6366f1',
-  },
-  requestName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  requestMeta: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   requestActions: {
     flexDirection: 'row',
     gap: 8,
   },
-  requestButton: {
+  actionButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -612,40 +561,11 @@ const styles = StyleSheet.create({
   declineButton: {
     backgroundColor: '#ef4444',
   },
-  sentRequestCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sentRequestAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e7ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  sentRequestAvatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6366f1',
-  },
-  sentRequestInfo: {
-    flex: 1,
-  },
-  sentRequestName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  sentRequestMeta: {
-    fontSize: 14,
+  pendingText: {
+    fontSize: 12,
     color: '#f59e0b',
-    marginTop: 2,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });
 
