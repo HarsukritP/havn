@@ -6,7 +6,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/harrypall/havn-backend/internal/models"
 	"github.com/harrypall/havn-backend/pkg/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
