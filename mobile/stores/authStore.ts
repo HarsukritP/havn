@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   profile: null,
-  isLoading: true, // Start as true, will be set to false after initialization
+  isLoading: false, // Start as FALSE - app is immediately ready
   isAuthenticated: false,
 
   setSession: (session) => {
@@ -84,23 +84,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
-    console.log('🔄 Initializing auth store...');
+    console.log('🔄 Initializing auth store (non-blocking)...');
     
-    // Always set loading to false after a maximum of 2 seconds
-    const maxTimeout = setTimeout(() => {
-      console.log('⏰ Auth initialization timeout - forcing ready');
-      set({ isLoading: false });
-    }, 2000);
-    
+    // Run initialization in background without blocking app
     try {
-      // Try to restore session from AsyncStorage with timeout
-      const sessionJson = await Promise.race([
-        AsyncStorage.getItem(AUTH_SESSION_KEY),
-        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
-      ]).catch(() => {
-        console.log('⚠️ AsyncStorage timeout or error');
-        return null;
-      });
+      const sessionJson = await AsyncStorage.getItem(AUTH_SESSION_KEY).catch(() => null);
       
       if (sessionJson && typeof sessionJson === 'string') {
         try {
@@ -110,7 +98,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // Check if session is expired
           if (session.expires_at && session.expires_at < Date.now()) {
             console.log('⚠️ Session expired, clearing...');
-            // Don't await signOut to prevent blocking
             get().signOut().catch(console.error);
           } else {
             console.log('✅ Session restored');
@@ -129,11 +116,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
-    } finally {
-      clearTimeout(maxTimeout);
-      set({ isLoading: false });
-      console.log('✅ Auth initialization complete');
     }
+    
+    console.log('✅ Auth initialization complete');
   },
 }));
 

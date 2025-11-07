@@ -4,14 +4,15 @@ import { useAuthStore } from '../../stores/authStore';
 
 export default function AuthLayout() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   // Redirect to tabs if already authenticated
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (isAuthenticated) {
+      console.log('🔄 Auth layout - redirecting to tabs');
       router.replace('/(tabs)');
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isAuthenticated]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
