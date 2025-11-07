@@ -52,6 +52,12 @@ function LoginScreen() {
           </Text>
         </View>
 
+        {/* Demo Mode Badge */}
+        <View style={styles.demoBadge}>
+          <Ionicons name="information-circle" size={20} color="#f59e0b" />
+          <Text style={styles.demoText}>Demo Mode - Tap below to explore the UI</Text>
+        </View>
+
         {/* Features List */}
         <View style={styles.featuresList}>
           <View style={styles.featureItem}>
@@ -88,17 +94,13 @@ function LoginScreen() {
           ) : (
             <>
               <Ionicons name="log-in-outline" size={24} color="white" />
-              <Text style={styles.loginButtonText}>Continue to Sign In</Text>
+              <Text style={styles.loginButtonText}>Enter Demo Mode</Text>
             </>
           )}
         </TouchableOpacity>
 
         <Text style={styles.infoText}>
-          You'll be able to sign in with Google, email, or other methods
-        </Text>
-
-        <Text style={styles.privacyText}>
-          By signing in, you agree to our Terms of Service and Privacy Policy
+          🎭 Mock authentication - no real login required
         </Text>
       </View>
     </SafeAreaView>
@@ -158,6 +160,21 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 16,
     color: '#111827',
+  },
+  demoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fef3c7',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  demoText: {
+    fontSize: 14,
+    color: '#92400e',
+    flex: 1,
+    fontWeight: '500',
   },
   errorContainer: {
     flexDirection: 'row',
